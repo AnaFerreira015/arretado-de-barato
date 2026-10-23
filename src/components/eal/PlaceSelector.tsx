@@ -29,7 +29,7 @@ export function PlaceSelector({
 }: {
   value: PlaceState;
   onChange: (v: PlaceState) => void;
-  errors: Record<string, string>;
+  errors: FieldErrors;
 }) {
   const [open, setOpen] = useState(false);
   const [geoStatus, setGeoStatus] = useState<"idle" | "loading" | "denied" | "error">("idle");

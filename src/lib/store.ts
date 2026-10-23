@@ -77,8 +77,8 @@ export type Favorite =
       label: string;
       modo: "descricao" | "gtin";
       termo: string;
-      gpc?: string;
-      ncm?: string;
+      gpc?: string | undefined;
+      ncm?: string | undefined;
       place: SavedPlace;
       dias: number;
       savedAt: string;

@@ -30,13 +30,13 @@ export const Route = createFileRoute("/lista")({
   component: ListPage,
 });
 
-type ItemPrices = { status: "ok" | "error"; records: SaleRecord[]; suggestions: SaleRecord[]; message?: string };
+type ItemPrices = { status: "ok" | "error"; records: SaleRecord[]; suggestions: SaleRecord[]; message?: string | undefined };
 
 function ListPage() {
   const items = listStore.use();
   const [place, setPlace] = useState<PlaceState | null>(null);
   const [dias, setDias] = useState<number>(LIMITS.diasDefault);
-  const [placeErrors, setPlaceErrors] = useState<Record<string, string>>({});
+  const [placeErrors, setPlaceErrors] = useState<FieldErrors>({});
   const [prices, setPrices] = useState<Record<string, ItemPrices>>({});
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [searchedAt, setSearchedAt] = useState<string | null>(null);
@@ -213,7 +213,7 @@ function AddItemForm() {
   const [qtd, setQtd] = useState("1");
   const [unidade, setUnidade] = useState("UN");
   const [gtin, setGtin] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<FieldErrors>({});
   const ids = { nome: useId(), qtd: useId(), un: useId(), gtin: useId() };
   const submit = () => {
     const e: Record<string, string> = {};

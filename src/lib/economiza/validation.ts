@@ -8,10 +8,10 @@ export type Place =
   | { tipo: "individual"; cnpj: string };
 
 export type ProductQuery = {
-  gtin?: string;
-  descricao?: string;
-  ncm?: string;
-  gpc?: string;
+  gtin?: string | undefined;
+  descricao?: string | undefined;
+  ncm?: string | undefined;
+  gpc?: string | undefined;
   place: Place;
   dias: number;
   pagina: number;
@@ -26,7 +26,10 @@ export type FuelQuery = {
   registrosPorPagina: number;
 };
 
-export type FieldErrors = Record<string, string>;
+export type FieldKey =
+  | "termo" | "ncm" | "gpc" | "place" | "municipio" | "geolocalizacao" | "raio" | "cnpj"
+  | "dias" | "pagina" | "registrosPorPagina" | "tipoCombustivel";
+export type FieldErrors = Partial<Record<FieldKey, string>>;
 export type Validated<T> = { ok: true; body: T } | { ok: false; errors: FieldErrors };
 
 const onlyDigits = (s: string) => /^\d+$/.test(s);
@@ -103,7 +106,7 @@ export function placeToBody(place: Place) {
 }
 
 export type ProductBody = {
-  produto: { gtin?: string; descricao?: string; ncm?: string; gpc?: string };
+  produto: { gtin?: string | undefined; descricao?: string | undefined; ncm?: string | undefined; gpc?: string | undefined };
   estabelecimento: ReturnType<typeof placeToBody>;
   dias: number;
   pagina: number;

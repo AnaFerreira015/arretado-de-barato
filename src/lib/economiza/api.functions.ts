@@ -12,7 +12,7 @@ import type { SearchPage } from "./adapter";
 
 export type SearchResponse =
   | { ok: true; page: SearchPage; fetchedAt: string; cached: boolean; demo: boolean }
-  | { ok: false; code: string; message: string; detail?: string; errors?: FieldErrors };
+  | { ok: false; code: string; message: string; detail?: string | undefined; errors?: FieldErrors };
 
 type In<T> = { query: T; demo: boolean };
 
