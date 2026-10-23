@@ -10,33 +10,91 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as CombustiveisRouteImport } from './routes/combustiveis'
+import { Route as CompararRouteImport } from './routes/comparar'
+import { Route as FavoritosRouteImport } from './routes/favoritos'
+import { Route as ListaRouteImport } from './routes/lista'
+import { Route as SobreRouteImport } from './routes/sobre'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CombustiveisRoute = CombustiveisRouteImport.update({
+  id: '/combustiveis',
+  path: '/combustiveis',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CompararRoute = CompararRouteImport.update({
+  id: '/comparar',
+  path: '/comparar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FavoritosRoute = FavoritosRouteImport.update({
+  id: '/favoritos',
+  path: '/favoritos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ListaRoute = ListaRouteImport.update({
+  id: '/lista',
+  path: '/lista',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SobreRoute = SobreRouteImport.update({
+  id: '/sobre',
+  path: '/sobre',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/combustiveis': typeof CombustiveisRoute
+  '/comparar': typeof CompararRoute
+  '/favoritos': typeof FavoritosRoute
+  '/lista': typeof ListaRoute
+  '/sobre': typeof SobreRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/combustiveis': typeof CombustiveisRoute
+  '/comparar': typeof CompararRoute
+  '/favoritos': typeof FavoritosRoute
+  '/lista': typeof ListaRoute
+  '/sobre': typeof SobreRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/combustiveis': typeof CombustiveisRoute
+  '/comparar': typeof CompararRoute
+  '/favoritos': typeof FavoritosRoute
+  '/lista': typeof ListaRoute
+  '/sobre': typeof SobreRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    '/' | '/combustiveis' | '/comparar' | '/favoritos' | '/lista' | '/sobre'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/combustiveis' | '/comparar' | '/favoritos' | '/lista' | '/sobre'
+  id:
+    | '__root__'
+    | '/'
+    | '/combustiveis'
+    | '/comparar'
+    | '/favoritos'
+    | '/lista'
+    | '/sobre'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  CombustiveisRoute: typeof CombustiveisRoute
+  CompararRoute: typeof CompararRoute
+  FavoritosRoute: typeof FavoritosRoute
+  ListaRoute: typeof ListaRoute
+  SobreRoute: typeof SobreRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +106,51 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/combustiveis': {
+      id: '/combustiveis'
+      path: '/combustiveis'
+      fullPath: '/combustiveis'
+      preLoaderRoute: typeof CombustiveisRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/comparar': {
+      id: '/comparar'
+      path: '/comparar'
+      fullPath: '/comparar'
+      preLoaderRoute: typeof CompararRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/favoritos': {
+      id: '/favoritos'
+      path: '/favoritos'
+      fullPath: '/favoritos'
+      preLoaderRoute: typeof FavoritosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lista': {
+      id: '/lista'
+      path: '/lista'
+      fullPath: '/lista'
+      preLoaderRoute: typeof ListaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sobre': {
+      id: '/sobre'
+      path: '/sobre'
+      fullPath: '/sobre'
+      preLoaderRoute: typeof SobreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  CombustiveisRoute: CombustiveisRoute,
+  CompararRoute: CompararRoute,
+  FavoritosRoute: FavoritosRoute,
+  ListaRoute: ListaRoute,
+  SobreRoute: SobreRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
