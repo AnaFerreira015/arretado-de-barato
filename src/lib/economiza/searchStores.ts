@@ -39,3 +39,12 @@ export const fuelFormStore = createStore<FuelForm>(
   "memory",
 );
 export const fuelSearchStore = createSearchStore<FuelQuery>();
+
+import type { Place } from "./validation";
+import type { SavedPlace } from "@/lib/store";
+/** Saved favorites never keep coordinates. */
+export function savedPlaceOf(p: Place): SavedPlace {
+  if (p.tipo === "geolocalizacao") return { tipo: "geolocalizacao", raio: p.raio };
+  if (p.tipo === "individual") return { tipo: "individual", cnpj: p.cnpj };
+  return { tipo: "municipio", codigoIBGE: p.codigoIBGE };
+}

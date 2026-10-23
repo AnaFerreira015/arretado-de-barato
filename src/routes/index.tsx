@@ -12,10 +12,10 @@ import { ModeBanner } from "@/components/eal/Notices";
 import { ResultsSection } from "@/components/eal/ResultsSection";
 import { GPC_SEGMENTS, LIMITS, SEARCH_EXAMPLES } from "@/lib/economiza/constants";
 import { searchProducts } from "@/lib/economiza/api.functions";
-import { productFormStore, productSearchStore } from "@/lib/economiza/searchStores";
+import { productFormStore, productSearchStore, savedPlaceOf } from "@/lib/economiza/searchStores";
 import { toPlace, useSearchRunner } from "@/lib/economiza/useSearch";
 import { validateProductQuery, type FieldErrors, type ProductQuery } from "@/lib/economiza/validation";
-import { favoritesStore, uid, type SavedPlace } from "@/lib/store";
+import { favoritesStore, uid } from "@/lib/store";
 import type { SaleRecord } from "@/lib/economiza/adapter";
 
 export const Route = createFileRoute("/")({
@@ -29,12 +29,6 @@ export const Route = createFileRoute("/")({
   }),
   component: ProductSearchPage,
 });
-
-export function savedPlaceOf(p: ProductQuery["place"]): SavedPlace {
-  if (p.tipo === "geolocalizacao") return { tipo: "geolocalizacao", raio: p.raio };
-  if (p.tipo === "individual") return { tipo: "individual", cnpj: p.cnpj };
-  return { tipo: "municipio", codigoIBGE: p.codigoIBGE };
-}
 
 function ProductSearchPage() {
   const form = productFormStore.use();
