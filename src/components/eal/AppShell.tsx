@@ -22,7 +22,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       </a>
       <header className="sticky top-0 z-30 border-b bg-card/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-5xl items-center gap-4 px-4">
-          <Link to="/" className="flex items-center gap-2 rounded-md font-display text-xl font-extrabold text-primary">
+          <Link to="/" className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md font-display text-xl font-extrabold text-primary">
             <span aria-hidden className="grid size-9 place-items-center rounded-lg bg-primary text-primary-foreground">
               R$
             </span>
@@ -43,7 +43,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               ))}
               <li>
                 <Link to="/sobre" className="inline-flex min-h-11 items-center gap-2 rounded-lg px-3 font-semibold text-muted-foreground hover:bg-accent data-[status=active]:bg-primary-soft data-[status=active]:text-accent-foreground">
-                  <Info aria-hidden className="size-5" /> Sobre os dados
+                  <Info aria-hidden className="size-5" /> Sobre
                 </Link>
               </li>
             </ul>
@@ -54,7 +54,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               className="inline-flex min-h-11 items-center gap-2 rounded-lg border-2 px-3 text-sm font-semibold hover:bg-accent data-[status=active]:border-primary"
             >
               <GitCompareArrows aria-hidden className="size-5" />
-              <span>Comparar</span>
+              <span className="sr-only sm:not-sr-only">Comparar</span>
               <span className="rounded-full bg-primary px-2 text-primary-foreground" aria-label={`${compareCount} itens`}>
                 {compareCount}
               </span>

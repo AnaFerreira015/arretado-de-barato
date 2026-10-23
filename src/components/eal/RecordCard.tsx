@@ -42,10 +42,10 @@ export function RecordCard({
 }: {
   r: SaleRecord;
   distanceKm: number | null;
-  cheapest?: boolean;
+  cheapest?: boolean | undefined;
   onDetails: () => void;
-  onFavorite?: () => void;
-  showProductActions?: boolean;
+  onFavorite?: (() => void) | undefined;
+  showProductActions?: boolean | undefined;
 }) {
   const inCompare = compareStore.use().some((c) => c.id === r.id);
   return (

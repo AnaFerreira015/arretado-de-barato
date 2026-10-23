@@ -8,7 +8,7 @@ export type Operation = "produto/pesquisa" | "combustivel/pesquisa";
 
 export type ProxyResult =
   | { ok: true; page: SearchPage; fetchedAt: string; cached: boolean; demo: boolean }
-  | { ok: false; code: ErrorCode; message: string; detail?: string };
+  | { ok: false; code: ErrorCode; message: string; detail?: string | undefined };
 
 export type ApiStatus = "ready" | "not_configured" | "insecure_transport";
 

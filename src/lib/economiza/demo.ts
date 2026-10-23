@@ -17,7 +17,7 @@ function hash(s: string) {
 }
 
 function storeJson(i: number, municipio: string, codigo: number) {
-  const s = STORES[i % STORES.length];
+  const s = STORES[i % STORES.length]!;
   return {
     cnpj: s.cnpj,
     razaoSocial: s.razao,
@@ -86,7 +86,7 @@ export function demoProducts(body: ProductBody, now = Date.now()) {
 export function demoFuel(body: FuelBody, now = Date.now()) {
   const { code, nome } = placeInfo(body.estabelecimento);
   const t = body.produto.tipoCombustivel;
-  const base = [0, 6.19, 6.39, 4.59, 6.09, 6.29, 4.89][t];
+  const base = [0, 6.19, 6.39, 4.59, 6.09, 6.29, 4.89][t] ?? 6;
   const unidade = t === 6 ? "M3" : "LT";
   const items = Array.from({ length: 5 }, (_, i) => ({
     produto: {

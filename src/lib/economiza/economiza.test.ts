@@ -64,11 +64,11 @@ describe("adapter", () => {
   it("accepts 'endereço', 'totalPaginas ' and falls back to razaoSocial", () => {
     const p = adaptPage({ totalRegistros: 1, "totalPaginas ": 3, pagina: 1, ultimaPagina: false, conteudo: [rec()] }, "produto");
     expect(p.totalPaginas).toBe(3);
-    expect(p.items[0].store.nome).toBe("RAZAO");
-    expect(p.items[0].store.bairro).toBe("FAROL");
-    expect(p.items[0].store.lat).toBeNull();
-    expect(p.items[0].gtin).toBe("07894600011622");
-    expect(p.items[0].gpc).toBeNull();
+    expect(p.items[0]!.store.nome).toBe("RAZAO");
+    expect(p.items[0]!.store.bairro).toBe("FAROL");
+    expect(p.items[0]!.store.lat).toBeNull();
+    expect(p.items[0]!.gtin).toBe("07894600011622");
+    expect(p.items[0]!.gpc).toBeNull();
     expect(p.ultimaPagina).toBe(false);
   });
   it("drops records without a valid price and counts them", () => {
@@ -96,7 +96,7 @@ describe("comparison and basket", () => {
   it("same GTIN is equivalent; different GTIN is not", () => {
     expect(equivalenceOf(page.items)).toBe("same-gtin");
     const other = adaptPage({ conteudo: [rec({ gtin: "78900000" })] }, "produto").items[0];
-    expect(equivalenceOf([page.items[0], other])).toBe("unconfirmed");
+    expect(equivalenceOf([page.items[0]!, other!])).toBe("unconfirmed");
   });
   it("missing items are not counted as zero and block savings", () => {
     const r = computeBasket([

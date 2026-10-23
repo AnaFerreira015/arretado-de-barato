@@ -53,7 +53,7 @@ export function ModeBanner() {
   );
 }
 
-export function ErrorState({ message, detail, onRetry }: { message: string; detail?: string; onRetry?: () => void }) {
+export function ErrorState({ message, detail, onRetry }: { message: string; detail?: string | undefined; onRetry?: () => void | undefined }) {
   return (
     <div role="alert" className="card-surface flex flex-col gap-3 border-destructive/40 p-4">
       <p className="flex items-start gap-2 font-semibold text-destructive">

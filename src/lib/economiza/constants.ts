@@ -103,7 +103,7 @@ export const GPC_SEGMENTS: GpcSegment[] = [
   ["58000000", "Segmento transversal"], ["85000000", "Segurança e proteção (faça você mesmo)"],
   ["91000000", "Segurança e vigilância"], ["77000000", "Automotivo"], ["51000000", "Saúde"],
   ["73000000", "Utensílios de cozinha"], ["72000000", "Utensílios domésticos"], ["67000000", "Vestuário"],
-].map(([codigo, nome]) => ({ codigo, nome }));
+].map(([codigo, nome]) => ({ codigo: codigo!, nome: nome! }));
 export const GPC_CODES = new Set(GPC_SEGMENTS.map((g) => g.codigo));
 
 export const FUEL_TYPES = [

@@ -19,8 +19,8 @@ export function ResultsSection<Q>({
   state: SearchState<Q>;
   onLoadMore: () => void;
   onRetry: () => void;
-  onFavoriteRecord?: (r: SaleRecord) => void;
-  extra?: (r: SaleRecord) => ReactNode;
+  onFavoriteRecord?: (r: SaleRecord) => void | undefined;
+  extra?: (r: SaleRecord) => ReactNode | undefined;
   kindLabel: string;
 }) {
   const [sort, setSort] = useState<SortKey>("preco");
