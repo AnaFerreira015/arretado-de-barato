@@ -4,8 +4,9 @@ import type { SaleRecord } from "./adapter";
 /** Records are automatically equivalent only when they share the same GTIN (and unit). */
 export function equivalenceOf(items: SaleRecord[]): "same-gtin" | "unconfirmed" {
   if (items.length < 2) return "unconfirmed";
-  const g = items[0].gtin;
-  const u = items[0].unidade.toUpperCase();
+  const first = items[0]!;
+  const g = first.gtin;
+  const u = first.unidade.toUpperCase();
   return g && items.every((i) => i.gtin === g && i.unidade.toUpperCase() === u) ? "same-gtin" : "unconfirmed";
 }
 
@@ -89,9 +90,10 @@ export async function runLimited<T, R>(
     while (next < inputs.length && !opts.signal.aborted) {
       const idx = next++;
       try {
-        out[idx] = { input: inputs[idx], result: await task(inputs[idx], opts.signal) };
+        const inp = inputs[idx]!;
+        out[idx] = { input: inp, result: await task(inp, opts.signal) };
       } catch (error) {
-        out[idx] = { input: inputs[idx], error };
+        out[idx] = { input: inputs[idx]!, error };
       }
       done++;
       opts.onProgress?.(done, inputs.length);

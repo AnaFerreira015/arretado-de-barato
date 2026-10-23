@@ -16,7 +16,7 @@ export type SearchState<Q> = {
   cached: boolean;
   demo: boolean;
   origin: { lat: number; lng: number } | null;
-  error: { message: string; detail?: string | undefined; errors?: FieldErrors } | null;
+  error: { message: string; detail?: string | undefined; errors?: FieldErrors | undefined } | null;
 };
 
 const empty = <Q,>(): SearchState<Q> => ({

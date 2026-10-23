@@ -14,6 +14,7 @@ import { searchProducts } from "@/lib/economiza/api.functions";
 import { computeBasket, runLimited } from "@/lib/economiza/compare";
 import { formatBRL, formatDateTime } from "@/lib/economiza/format";
 import { toPlace } from "@/lib/economiza/useSearch";
+import type { FieldErrors } from "@/lib/economiza/validation";
 import { validateDescricao, validateGtin, validateProductQuery } from "@/lib/economiza/validation";
 import type { SaleRecord } from "@/lib/economiza/adapter";
 import { listStore, prefsStore, uid, type ListItem } from "@/lib/store";
@@ -213,10 +214,10 @@ function AddItemForm() {
   const [qtd, setQtd] = useState("1");
   const [unidade, setUnidade] = useState("UN");
   const [gtin, setGtin] = useState("");
-  const [errors, setErrors] = useState<FieldErrors>({});
+  const [errors, setErrors] = useState<{ nome?: string; qtd?: string; gtin?: string }>({});
   const ids = { nome: useId(), qtd: useId(), un: useId(), gtin: useId() };
   const submit = () => {
-    const e: Record<string, string> = {};
+    const e: { nome?: string; qtd?: string; gtin?: string } = {};
     const nErr = validateDescricao(nome);
     if (nErr) e.nome = nErr;
     const q = Number(qtd.replace(",", "."));
@@ -257,7 +258,7 @@ function AddItemForm() {
   );
 }
 
-function ListRow({ item, prices, onUpdate, onRemove }: { item: ListItem; prices?: ItemPrices; onUpdate: (p: Partial<ListItem>) => void; onRemove: () => void }) {
+function ListRow({ item, prices, onUpdate, onRemove }: { item: ListItem; prices?: ItemPrices | undefined; onUpdate: (p: Partial<ListItem>) => void; onRemove: () => void }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(item);
   const cb = useId();

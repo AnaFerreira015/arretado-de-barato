@@ -9,6 +9,7 @@ import { LIMITS, MUNICIPIOS, municipioNome } from "@/lib/economiza/constants";
 import { prefsStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { FieldError } from "./FieldError";
+import type { FieldErrors } from "@/lib/economiza/validation";
 
 export type PlaceState = {
   mode: "municipio" | "geo";
@@ -83,7 +84,7 @@ export function PlaceSelector({
               max={LIMITS.raioMax}
               step={1}
               value={[value.raio]}
-              onValueChange={([r]) => onChange({ ...value, raio: r })}
+              onValueChange={([r]) => onChange({ ...value, raio: r ?? value.raio })}
               aria-label={`Distância máxima, ${value.raio} quilômetros`}
             />
             <div className="mt-1 flex justify-between text-sm text-muted-foreground" aria-hidden>

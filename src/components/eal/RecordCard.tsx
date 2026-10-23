@@ -44,7 +44,7 @@ export function RecordCard({
   distanceKm: number | null;
   cheapest?: boolean | undefined;
   onDetails: () => void;
-  onFavorite?: () => void | undefined;
+  onFavorite?: (() => void) | undefined;
   showProductActions?: boolean | undefined;
 }) {
   const inCompare = compareStore.use().some((c) => c.id === r.id);
