@@ -44,14 +44,16 @@ function ProductSearchPage() {
     if (!productFormStore.get().place) set({ place: initialPlace() });
   }, []);
 
-  const buildQuery = (pagina: number): ProductQuery => {
+  const buildQuery = (pagina: number): ProductQuery | null => {
     const f = productFormStore.get();
+    const place = toPlace(f.place ?? initialPlace(), f.cnpj);
+    if (!place) return null;
     return {
       gtin: f.modo === "gtin" ? f.termo.trim() : undefined,
       descricao: f.modo === "descricao" ? f.termo.trim() : undefined,
       ncm: f.modo === "descricao" ? f.ncm.trim() || undefined : undefined,
       gpc: f.modo === "descricao" ? f.gpc || undefined : undefined,
-      place: toPlace(f.place ?? initialPlace(), f.cnpj)!,
+      place,
       dias: f.dias,
       pagina,
       registrosPorPagina: LIMITS.registrosDefault,
@@ -60,6 +62,10 @@ function ProductSearchPage() {
 
   const submit = () => {
     const q = buildQuery(1);
+    if (!q) {
+      setErrors({ place: "Escolha um município, use sua localização ou informe um CNPJ." });
+      return;
+    }
     const v = validateProductQuery(q);
     if (!v.ok) {
       setErrors(v.errors);
@@ -81,6 +87,8 @@ function ProductSearchPage() {
 
   const serverErrors = state.error?.errors ?? {};
   const allErrors = { ...serverErrors, ...errors };
+  const currentQuery = buildQuery(1);
+  const canSearch = currentQuery !== null && validateProductQuery(currentQuery).ok;
 
   const saveSearch = () => {
     const q = state.query;
@@ -168,9 +176,6 @@ function ProductSearchPage() {
               aria-describedby={`${ids.hint} ${allErrors.termo ? ids.termoErr : ""}`}
               className="min-h-12 flex-1 border-2 border-input text-lg"
             />
-            <Button type="submit" size="lg" disabled={state.status === "loading"}>
-              <Search aria-hidden /> Pesquisar
-            </Button>
           </div>
           <FieldError id={ids.termoErr} message={allErrors.termo} />
           {form.modo === "descricao" && (
@@ -234,6 +239,11 @@ function ProductSearchPage() {
             </div>
           </CollapsibleContent>
         </Collapsible>
+        {canSearch && (
+          <Button type="submit" size="lg" disabled={state.status === "loading"}>
+            <Search aria-hidden /> Pesquisar
+          </Button>
+        )}
       </form>
 
       {state.status === "success" && state.query && (

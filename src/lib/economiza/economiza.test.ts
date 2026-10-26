@@ -8,6 +8,17 @@ import { cacheKey } from "./proxy.server";
 const base: ProductQuery = { descricao: "LEITE", place: { tipo: "municipio", codigoIBGE: 2704302 }, dias: 7, pagina: 1, registrosPorPagina: 100 };
 
 describe("product validation", () => {
+  it("permits product search only after required product and establishment are valid", () => {
+    expect(validateProductQuery({ ...base, descricao: "", place: { tipo: "municipio", codigoIBGE: 0 } }).ok).toBe(false);
+    expect(validateProductQuery({ ...base, descricao: "arroz", place: { tipo: "municipio", codigoIBGE: 0 } }).ok).toBe(false);
+    expect(validateProductQuery({ ...base, descricao: "arroz" }).ok).toBe(true);
+  });
+  it("permits fuel search only after required fuel and establishment are valid", () => {
+    const q = { tipoCombustivel: 0, place: base.place, dias: 7, pagina: 1, registrosPorPagina: 100 };
+    expect(validateFuelQuery(q).ok).toBe(false);
+    expect(validateFuelQuery({ ...q, tipoCombustivel: 1, place: { tipo: "municipio", codigoIBGE: 0 } }).ok).toBe(false);
+    expect(validateFuelQuery({ ...q, tipoCombustivel: 1 }).ok).toBe(true);
+  });
   it("rejects gtin and descricao together", () => {
     expect(validateProductQuery({ ...base, gtin: "78912345" }).ok).toBe(false);
   });

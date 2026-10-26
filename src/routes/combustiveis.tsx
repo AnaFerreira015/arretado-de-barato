@@ -46,6 +46,21 @@ function FuelPage() {
     if (!fuelFormStore.get().place) set({ place: initialPlace() });
   }, []);
 
+  const buildQuery = (): FuelQuery | null => {
+    const f = fuelFormStore.get();
+    const place = toPlace(f.place ?? initialPlace(), f.cnpj);
+    if (!place) return null;
+    return {
+      tipoCombustivel: f.tipo ?? 0,
+      place,
+      dias: f.dias,
+      pagina: 1,
+      registrosPorPagina: LIMITS.registrosDefault,
+    };
+  };
+  const currentQuery = buildQuery();
+  const canSearch = currentQuery !== null && validateFuelQuery(currentQuery).ok;
+
   const submit = () => {
     const f = fuelFormStore.get();
     const errs: FieldErrors = {};
@@ -53,13 +68,11 @@ function FuelPage() {
       const e = validateCnpj(f.cnpj);
       if (e) errs.cnpj = e;
     }
-    const q: FuelQuery = {
-      tipoCombustivel: f.tipo ?? 0,
-      place: toPlace(f.place ?? initialPlace(), f.cnpj)!,
-      dias: f.dias,
-      pagina: 1,
-      registrosPorPagina: LIMITS.registrosDefault,
-    };
+    const q = buildQuery();
+    if (!q) {
+      setErrors({ place: "Escolha um município, use sua localização ou informe um CNPJ.", ...errs });
+      return;
+    }
     const v = validateFuelQuery(q);
     if (!v.ok || Object.keys(errs).length) {
       setErrors({ ...(v.ok ? {} : v.errors), ...errs });
@@ -124,9 +137,11 @@ function FuelPage() {
             </div>
           </div>
         </div>
-        <Button type="submit" size="lg" disabled={state.status === "loading"}>
-          <Search aria-hidden /> Pesquisar
-        </Button>
+        {canSearch && (
+          <Button type="submit" size="lg" disabled={state.status === "loading"}>
+            <Search aria-hidden /> Pesquisar
+          </Button>
+        )}
       </form>
 
       {state.status === "success" && state.items.length > 0 && (
