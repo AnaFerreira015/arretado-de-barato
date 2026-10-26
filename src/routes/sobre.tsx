@@ -15,6 +15,8 @@ export const Route = createFileRoute("/sobre")({
   head: () => ({
     meta: [
       { title: "Sobre os dados — Economiza AL" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "De onde vêm os preços do Economiza AL, seus limites e como seus dados ficam no aparelho." },
       { property: "og:title", content: "Sobre os dados — Economiza AL" },
       { property: "og:description", content: "Preços de vendas registradas em notas fiscais de Alagoas, via SEFAZ/AL." },

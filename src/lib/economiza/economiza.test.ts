@@ -1,13 +1,40 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { validateFuelQuery, validateProductQuery, type ProductQuery } from "./validation";
 import { adaptPage } from "./adapter";
 import { computeBasket, equivalenceOf } from "./compare";
 import { formatBRL, formatDateTime, formatFuelBRL } from "./format";
-import { cacheKey } from "./proxy.server";
+import { apiStatus, cacheKey } from "./proxy.server";
 
 const base: ProductQuery = { descricao: "LEITE", place: { tipo: "municipio", codigoIBGE: 2704302 }, dias: 7, pagina: 1, registrosPorPagina: 100 };
 
+describe("configured access", () => {
+  it("requires a secure endpoint even after a token has been saved", () => {
+    vi.stubEnv("ECONOMIZA_APP_TOKEN", "test-fixture-not-a-credential");
+    try {
+      vi.stubEnv("ECONOMIZA_API_BASE_URL", "");
+      expect(apiStatus()).toBe("endpoint_not_configured");
+      vi.stubEnv("ECONOMIZA_API_BASE_URL", "http://example.invalid/");
+      expect(apiStatus()).toBe("insecure_transport");
+      vi.stubEnv("ECONOMIZA_API_BASE_URL", "https://example.invalid/");
+      expect(apiStatus()).toBe("ready");
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+});
+
 describe("product validation", () => {
+  it("permits product search only after required product and establishment are valid", () => {
+    expect(validateProductQuery({ ...base, descricao: "", place: { tipo: "municipio", codigoIBGE: 0 } }).ok).toBe(false);
+    expect(validateProductQuery({ ...base, descricao: "arroz", place: { tipo: "municipio", codigoIBGE: 0 } }).ok).toBe(false);
+    expect(validateProductQuery({ ...base, descricao: "arroz" }).ok).toBe(true);
+  });
+  it("permits fuel search only after required fuel and establishment are valid", () => {
+    const q = { tipoCombustivel: 0, place: base.place, dias: 7, pagina: 1, registrosPorPagina: 100 };
+    expect(validateFuelQuery(q).ok).toBe(false);
+    expect(validateFuelQuery({ ...q, tipoCombustivel: 1, place: { tipo: "municipio", codigoIBGE: 0 } }).ok).toBe(false);
+    expect(validateFuelQuery({ ...q, tipoCombustivel: 1 }).ok).toBe(true);
+  });
   it("rejects gtin and descricao together", () => {
     expect(validateProductQuery({ ...base, gtin: "78912345" }).ok).toBe(false);
   });

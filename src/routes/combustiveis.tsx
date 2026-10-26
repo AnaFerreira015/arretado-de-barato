@@ -21,6 +21,8 @@ export const Route = createFileRoute("/combustiveis")({
   head: () => ({
     meta: [
       { title: "Combustíveis — Economiza AL" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Consulte preços de gasolina, etanol, diesel e GNV registrados em vendas de postos de Alagoas." },
       { property: "og:title", content: "Preços de combustíveis em Alagoas — Economiza AL" },
       { property: "og:description", content: "Gasolina, etanol, diesel e GNV: veja preços registrados em vendas recentes nos postos." },
@@ -46,6 +48,21 @@ function FuelPage() {
     if (!fuelFormStore.get().place) set({ place: initialPlace() });
   }, []);
 
+  const buildQuery = (): FuelQuery | null => {
+    const f = fuelFormStore.get();
+    const place = toPlace(f.place ?? initialPlace(), f.cnpj);
+    if (!place) return null;
+    return {
+      tipoCombustivel: f.tipo ?? 0,
+      place,
+      dias: f.dias,
+      pagina: 1,
+      registrosPorPagina: LIMITS.registrosDefault,
+    };
+  };
+  const currentQuery = buildQuery();
+  const canSearch = currentQuery !== null && validateFuelQuery(currentQuery).ok;
+
   const submit = () => {
     const f = fuelFormStore.get();
     const errs: FieldErrors = {};
@@ -53,13 +70,11 @@ function FuelPage() {
       const e = validateCnpj(f.cnpj);
       if (e) errs.cnpj = e;
     }
-    const q: FuelQuery = {
-      tipoCombustivel: f.tipo ?? 0,
-      place: toPlace(f.place ?? initialPlace(), f.cnpj)!,
-      dias: f.dias,
-      pagina: 1,
-      registrosPorPagina: LIMITS.registrosDefault,
-    };
+    const q = buildQuery();
+    if (!q) {
+      setErrors({ place: "Escolha um município, use sua localização ou informe um CNPJ.", ...errs });
+      return;
+    }
     const v = validateFuelQuery(q);
     if (!v.ok || Object.keys(errs).length) {
       setErrors({ ...(v.ok ? {} : v.errors), ...errs });
@@ -124,9 +139,11 @@ function FuelPage() {
             </div>
           </div>
         </div>
-        <Button type="submit" size="lg" disabled={state.status === "loading"}>
-          <Search aria-hidden /> Pesquisar
-        </Button>
+        {canSearch && (
+          <Button type="submit" size="lg" disabled={state.status === "loading"}>
+            <Search aria-hidden /> Pesquisar
+          </Button>
+        )}
       </form>
 
       {state.status === "success" && state.items.length > 0 && (
