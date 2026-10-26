@@ -119,6 +119,8 @@ export const fuelName = (c: number) => FUEL_TYPES.find((f) => f.codigo === c)?.n
 export const SEARCH_EXAMPLES = ["arroz", "leite", "café", "feijão", "açúcar"];
 
 export const MESSAGES = {
+  endpoint_not_configured:
+    "O token de acesso está configurado. A consulta real ainda depende de um endereço HTTPS válido da SEFAZ/AL.",
   not_configured:
     "A consulta de preços ainda não foi configurada neste site. Falta o token de acesso fornecido pela SEFAZ/AL.",
   insecure_transport:

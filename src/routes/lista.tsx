@@ -23,6 +23,8 @@ export const Route = createFileRoute("/lista")({
   head: () => ({
     meta: [
       { title: "Lista de compras — Economiza AL" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Monte sua lista de compras e estime o total com preços registrados em Alagoas." },
       { property: "og:title", content: "Lista de compras — Economiza AL" },
       { property: "og:description", content: "Organize sua lista e veja onde cada item foi vendido mais barato." },

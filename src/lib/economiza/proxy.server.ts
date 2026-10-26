@@ -10,12 +10,13 @@ export type ProxyResult =
   | { ok: true; page: SearchPage; fetchedAt: string; cached: boolean; demo: boolean }
   | { ok: false; code: ErrorCode; message: string; detail?: string | undefined };
 
-export type ApiStatus = "ready" | "not_configured" | "insecure_transport";
+export type ApiStatus = "ready" | "not_configured" | "endpoint_not_configured" | "insecure_transport";
 
 export function apiStatus(): ApiStatus {
   const token = process.env["ECONOMIZA_APP_TOKEN"];
   const base = process.env["ECONOMIZA_API_BASE_URL"];
-  if (!token || !base) return "not_configured";
+  if (!token) return "not_configured";
+  if (!base) return "endpoint_not_configured";
   // Never send the token over plain HTTP.
   if (!base.toLowerCase().startsWith("https://")) return "insecure_transport";
   return "ready";

@@ -21,6 +21,8 @@ export const Route = createFileRoute("/combustiveis")({
   head: () => ({
     meta: [
       { title: "Combustíveis — Economiza AL" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Consulte preços de gasolina, etanol, diesel e GNV registrados em vendas de postos de Alagoas." },
       { property: "og:title", content: "Preços de combustíveis em Alagoas — Economiza AL" },
       { property: "og:description", content: "Gasolina, etanol, diesel e GNV: veja preços registrados em vendas recentes nos postos." },

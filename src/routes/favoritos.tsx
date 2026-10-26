@@ -12,6 +12,8 @@ export const Route = createFileRoute("/favoritos")({
   head: () => ({
     meta: [
       { title: "Favoritos — Economiza AL" },
+      { property: "og:type", content: "website" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Suas pesquisas e produtos favoritos, salvos neste aparelho para consultar de novo." },
       { property: "og:title", content: "Favoritos — Economiza AL" },
       { property: "og:description", content: "Repita pesquisas de preços salvas com um toque." },
