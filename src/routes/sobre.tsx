@@ -14,11 +14,11 @@ import { clearDeviceData, prefsStore } from "@/lib/store";
 export const Route = createFileRoute("/sobre")({
   head: () => ({
     meta: [
-      { title: "Sobre os dados — Economiza AL" },
+      { title: "Sobre os dados — Arretado de Barato" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "description", content: "De onde vêm os preços do Economiza AL, seus limites e como seus dados ficam no aparelho." },
-      { property: "og:title", content: "Sobre os dados — Economiza AL" },
+      { name: "description", content: "De onde vêm os preços do Arretado de Barato, seus limites e como seus dados ficam no aparelho." },
+      { property: "og:title", content: "Sobre os dados — Arretado de Barato" },
       { property: "og:description", content: "Preços de vendas registradas em notas fiscais de Alagoas, via SEFAZ/AL." },
     ],
   }),
@@ -46,7 +46,7 @@ function AboutPage() {
           <li>Horários são mostrados no horário de Alagoas.</li>
         </ul>
         <p className="text-sm text-muted-foreground">
-          O Economiza AL é um aplicativo independente e não é um aplicativo oficial do governo.
+          O Arretado de Barato é um aplicativo independente e não é um aplicativo oficial do governo.
         </p>
       </section>
 

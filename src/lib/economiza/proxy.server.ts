@@ -17,8 +17,13 @@ export function apiStatus(): ApiStatus {
   const base = process.env["ECONOMIZA_API_BASE_URL"];
   if (!token) return "not_configured";
   if (!base) return "endpoint_not_configured";
-  // Never send the token over plain HTTP.
-  if (!base.toLowerCase().startsWith("https://")) return "insecure_transport";
+  let url: URL;
+  try { url = new URL(base); } catch { return "endpoint_not_configured"; }
+  const officialHttp = process.env["ECONOMIZA_ALLOW_HTTP"] === "true"
+    && url.origin === "http://api.sefaz.al.gov.br"
+    && url.pathname.replace(/\/+$/, "") === "/sfz-economiza-alagoas-api/api/public"
+    && !url.username && !url.password && !url.search && !url.hash;
+  if (url.protocol !== "https:" && !officialHttp) return "insecure_transport";
   return "ready";
 }
 
@@ -84,12 +89,13 @@ export async function callApi(op: Operation, body: unknown, kind: "produto" | "c
     try {
       const res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/json", AppToken: token },
+        redirect: "error",
+        headers: { "Content-Type": "application/json", Accept: "application/json", appToken: token },
         body: JSON.stringify(body),
         signal: ctrl.signal,
       });
-      clearTimeout(timer);
       const text = await res.text();
+      clearTimeout(timer);
       let json: unknown = null;
       try {
         json = text ? JSON.parse(text) : null;

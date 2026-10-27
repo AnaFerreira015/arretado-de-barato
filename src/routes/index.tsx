@@ -21,11 +21,11 @@ import type { SaleRecord } from "@/lib/economiza/adapter";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "Economiza AL — Pesquise preços de produtos em Alagoas" },
+      { title: "Arretado de Barato — Pesquise preços de produtos em Alagoas" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Compare preços registrados em notas fiscais de supermercados e lojas de Alagoas, por nome ou código de barras." },
-      { property: "og:title", content: "Economiza AL — Pesquise preços em Alagoas" },
+      { property: "og:title", content: "Arretado de Barato — Pesquise preços em Alagoas" },
       { property: "og:description", content: "Pesquise e compare preços registrados em vendas de Alagoas, com dados da SEFAZ/AL." },
     ],
   }),

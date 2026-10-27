@@ -3,7 +3,7 @@ import { validateFuelQuery, validateProductQuery, type ProductQuery } from "./va
 import { adaptPage } from "./adapter";
 import { computeBasket, equivalenceOf } from "./compare";
 import { formatBRL, formatDateTime, formatFuelBRL } from "./format";
-import { apiStatus, cacheKey } from "./proxy.server";
+import { apiStatus, cacheKey, callApi } from "./proxy.server";
 
 const base: ProductQuery = { descricao: "LEITE", place: { tipo: "municipio", codigoIBGE: 2704302 }, dias: 7, pagina: 1, registrosPorPagina: 100 };
 
@@ -143,5 +143,37 @@ describe("cache key", () => {
   it("includes every criterion regardless of key order", () => {
     expect(cacheKey("produto/pesquisa", { a: 1, b: { c: 2, d: 3 } })).toBe(cacheKey("produto/pesquisa", { b: { d: 3, c: 2 }, a: 1 }));
     expect(cacheKey("produto/pesquisa", { dias: 7 })).not.toBe(cacheKey("produto/pesquisa", { dias: 6 }));
+  });
+});
+
+
+describe("documented SEFAZ request", () => {
+  it("permits HTTP only for the official endpoint with explicit configuration", () => {
+    vi.stubEnv("ECONOMIZA_APP_TOKEN", "test-token");
+    vi.stubEnv("ECONOMIZA_API_BASE_URL", "http://api.sefaz.al.gov.br/sfz-economiza-alagoas-api/api/public/");
+    vi.stubEnv("ECONOMIZA_ALLOW_HTTP", "false");
+    expect(apiStatus()).toBe("insecure_transport");
+    vi.stubEnv("ECONOMIZA_ALLOW_HTTP", "true");
+    expect(apiStatus()).toBe("ready");
+    vi.stubEnv("ECONOMIZA_API_BASE_URL", "http://example.invalid/");
+    expect(apiStatus()).toBe("insecure_transport");
+    vi.unstubAllEnvs();
+  });
+  it("sends the screenshot body and appToken header and adapts the result", async () => {
+    vi.stubEnv("ECONOMIZA_APP_TOKEN", "test-token");
+    vi.stubEnv("ECONOMIZA_API_BASE_URL", "http://api.sefaz.al.gov.br/sfz-economiza-alagoas-api/api/public/");
+    vi.stubEnv("ECONOMIZA_ALLOW_HTTP", "true");
+    const request = validateProductQuery({ ...base, descricao: "leite", gpc: "50000000", pagina: 2, registrosPorPagina: 5000 });
+    expect(request.ok).toBe(true);
+    if (!request.ok) throw new Error("Invalid fixture");
+    expect(request.body).toEqual({ produto: { descricao: "leite", gpc: "50000000" }, estabelecimento: { municipio: { codigoIBGE: 2704302 } }, dias: 7, pagina: 2, registrosPorPagina: 5000 });
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ conteudo: [rec()], pagina: 2, totalPaginas: 7 })));
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const result = await callApi("produto/pesquisa", request.body, "produto");
+      expect(fetchMock).toHaveBeenCalledWith("http://api.sefaz.al.gov.br/sfz-economiza-alagoas-api/api/public/produto/pesquisa", expect.objectContaining({ method: "POST", headers: expect.objectContaining({ appToken: "test-token", "Content-Type": "application/json" }), body: JSON.stringify(request.body), redirect: "error" }));
+      expect(result.ok && result.page.items[0]?.valorVenda).toBe(1.57);
+      expect(JSON.stringify(result)).not.toContain("test-token");
+    } finally { vi.unstubAllGlobals(); vi.unstubAllEnvs(); }
   });
 });

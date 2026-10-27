@@ -120,11 +120,11 @@ export const SEARCH_EXAMPLES = ["arroz", "leite", "café", "feijão", "açúcar"
 
 export const MESSAGES = {
   endpoint_not_configured:
-    "O token de acesso está configurado. A consulta real ainda depende de um endereço HTTPS válido da SEFAZ/AL.",
+    "O token de acesso está configurado. Falta configurar um endereço válido da API da SEFAZ/AL.",
   not_configured:
     "A consulta de preços ainda não foi configurada neste site. Falta o token de acesso fornecido pela SEFAZ/AL.",
   insecure_transport:
-    "A consulta real está desativada: o serviço da SEFAZ/AL não oferece conexão segura (HTTPS) confirmada, e o token não pode ser enviado sem proteção.",
+    "A consulta está desativada: o endereço configurado não usa HTTPS nem a exceção autorizada para o endpoint oficial.",
   auth: "O acesso ao serviço da SEFAZ/AL foi recusado. O token pode estar inválido ou sem autorização.",
   timeout: "O serviço da SEFAZ/AL demorou demais para responder. Tente novamente em instantes.",
   unavailable: "O serviço da SEFAZ/AL está indisponível no momento. Tente novamente mais tarde.",

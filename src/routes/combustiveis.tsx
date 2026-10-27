@@ -20,11 +20,11 @@ import { favoritesStore, uid } from "@/lib/store";
 export const Route = createFileRoute("/combustiveis")({
   head: () => ({
     meta: [
-      { title: "Combustíveis — Economiza AL" },
+      { title: "Combustíveis — Arretado de Barato" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Consulte preços de gasolina, etanol, diesel e GNV registrados em vendas de postos de Alagoas." },
-      { property: "og:title", content: "Preços de combustíveis em Alagoas — Economiza AL" },
+      { property: "og:title", content: "Preços de combustíveis em Alagoas — Arretado de Barato" },
       { property: "og:description", content: "Gasolina, etanol, diesel e GNV: veja preços registrados em vendas recentes nos postos." },
     ],
   }),

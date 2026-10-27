@@ -21,14 +21,14 @@ export function AppShell({ children }: { children: ReactNode }) {
         Pular para o conteúdo
       </a>
       <header className="sticky top-0 z-30 border-b bg-card/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-5xl items-center gap-4 px-4">
-          <Link to="/" className="flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md font-display text-xl font-extrabold text-primary">
+        <div className="mx-auto flex h-16 max-w-5xl items-center gap-2 px-3 sm:gap-4 sm:px-4">
+          <Link to="/" className="flex min-w-0 items-center gap-2 rounded-md font-display text-base sm:text-xl font-extrabold text-primary">
             <span aria-hidden className="grid size-9 place-items-center rounded-lg bg-primary text-primary-foreground">
               R$
             </span>
-            Economiza AL
+            <span className="max-w-32 leading-tight sm:max-w-none">Arretado de Barato</span>
           </Link>
-          <nav aria-label="Principal" className="ml-auto hidden md:block">
+          <nav aria-label="Principal" className="ml-auto hidden lg:block">
             <ul className="flex items-center gap-1">
               {NAV.map((n) => (
                 <li key={n.to}>
@@ -48,7 +48,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </li>
             </ul>
           </nav>
-          <div className="ml-auto flex items-center gap-1 md:ml-2">
+          <div className="ml-auto flex items-center gap-1 lg:ml-2">
             <Link
               to="/comparar"
               className="inline-flex min-h-11 items-center gap-2 rounded-lg border-2 px-3 text-sm font-semibold hover:bg-accent data-[status=active]:border-primary"
@@ -59,25 +59,25 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {compareCount}
               </span>
             </Link>
-            <Link to="/sobre" className="inline-flex size-11 items-center justify-center rounded-lg hover:bg-accent md:hidden" aria-label="Sobre os dados">
+            <Link to="/sobre" className="inline-flex size-11 items-center justify-center rounded-lg hover:bg-accent lg:hidden" aria-label="Sobre os dados">
               <Info aria-hidden className="size-5" />
             </Link>
           </div>
         </div>
       </header>
 
-      <main id="conteudo" tabIndex={-1} className="mx-auto w-full max-w-5xl flex-1 px-4 pb-28 pt-5 outline-none md:pb-12">
+      <main id="conteudo" tabIndex={-1} className="mx-auto w-full max-w-5xl flex-1 px-4 pb-28 pt-5 outline-none lg:pb-12">
         {children}
       </main>
 
-      <footer className="border-t bg-card pb-24 md:pb-0">
+      <footer className="border-t bg-card pb-24 lg:pb-0">
         <div className="mx-auto max-w-5xl px-4 py-5 text-sm text-muted-foreground">
-          Economiza AL é um aplicativo independente que utiliza dados públicos do Economiza Alagoas, da SEFAZ/AL. Não é um
+          Arretado de Barato é um aplicativo independente que utiliza dados públicos do Economiza Alagoas, da SEFAZ/AL. Não é um
           aplicativo oficial do governo.
         </div>
       </footer>
 
-      <nav aria-label="Navegação inferior" className="fixed inset-x-0 bottom-0 z-30 border-t bg-card md:hidden">
+      <nav aria-label="Navegação inferior" className="fixed inset-x-0 bottom-0 z-30 border-t bg-card lg:hidden">
         <ul className="grid grid-cols-4">
           {NAV.map((n) => (
             <li key={n.to}>

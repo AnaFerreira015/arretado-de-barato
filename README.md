@@ -1,72 +1,57 @@
-# Economiza AL
+# Arretado de Barato
 
-Aplicativo independente para pesquisar e comparar preços de produtos e combustíveis em Alagoas, com dados do
-serviço público **Economiza Alagoas (SEFAZ/AL)**. Não é um aplicativo oficial do governo.
+Aplicativo independente para consultar e comparar preços registrados em vendas de Alagoas, usando o Economiza Alagoas da SEFAZ/AL.
 
 ## Executar
 
+Use Node.js 22.12 ou superior (recomendado: Node.js 24).
+
+```bash
+npm install
+npm run dev
 ```
-bun install
-bun run dev      # http://localhost:8080
-bun run test     # testes de regras (validação, adaptador, datas, moeda, cesta, cache)
+
+O arquivo `.env.local` desta entrega já contém a configuração e o token informado. Ele é privado e ignorado pelo Git: não o publique nem compartilhe o ZIP publicamente. Em outra instalação, copie `.env.example` para `.env.local` e preencha `ECONOMIZA_APP_TOKEN`.
+
+## API
+
+As consultas passam pelas funções de servidor do TanStack Start. O navegador não recebe o token. O servidor envia `POST` para `produto/pesquisa` ou `combustivel/pesquisa`, com os cabeçalhos `appToken` e `Content-Type: application/json`.
+
+Exemplo de corpo, conforme os prints:
+
+```json
+{
+  "produto": { "descricao": "leite", "gpc": "50000000" },
+  "estabelecimento": { "municipio": { "codigoIBGE": 2704302 } },
+  "dias": 7,
+  "pagina": 2,
+  "registrosPorPagina": 5000
+}
 ```
 
-## Variáveis de ambiente (somente servidor)
+A configuração usa o endereço HTTP dos prints. Nesse trecho entre o servidor e a SEFAZ, HTTP não cifra o token. A exceção é limitada ao endereço oficial e exige `ECONOMIZA_ALLOW_HTTP=true`. Redirecionamentos são recusados. Quando houver endpoint HTTPS funcional, configure-o e desative essa opção. Não use prefixo `VITE_` nas variáveis privadas.
 
-| Variável | Uso |
-|---|---|
-| `ECONOMIZA_API_BASE_URL` | URL base da API. **Precisa começar com `https://`.** |
-| `ECONOMIZA_APP_TOKEN` | Token (AppToken) fornecido pela SEFAZ/AL. |
+O adaptador lê `conteudo`, os metadados de paginação, `produto.venda` e `estabelecimento`; também aceita `endereço` e `totalPaginas ` com espaço final. Resultados de demonstração continuam disponíveis somente quando selecionados pelo usuário.
 
-Nunca exponha essas variáveis com prefixo `VITE_`. O token não é registrado em logs nem devolvido em mensagens de erro.
+## Produção
 
-### Token
-Solicite pelo e-mail `api@sefaz.al.gov.br` informando CPF e nome do responsável e nome/URL do aplicativo (manual, seção 3).
+```bash
+npm run build
+npm start
+```
 
-### Transporte HTTPS — impedimento atual
-O manual informa apenas `http://api.sefaz.al.gov.br/sfz-economiza-alagoas-api/api/public/`. Em 23/10/2026, uma
-tentativa via HTTPS falhou: o certificado apresentado não corresponde ao nome `api.sefaz.al.gov.br`.
-Por isso o proxy **recusa** URLs `http://` e mostra “consulta real desativada”. Para ativar:
-1. Confirmar com a SEFAZ/AL um endereço HTTPS válido; ou
-2. Usar um intermediário próprio com HTTPS até a SEFAZ por rede confiável.
+O build produz `.output/` para servidor Node.js. Execute `npm start` na raiz com `.env.local`, ou configure as três variáveis no provedor e use `node .output/server/index.mjs`. A aplicação precisa de servidor; não basta hospedar os arquivos estáticos.
 
-## Arquitetura
-- `src/lib/economiza/validation.ts` — regras do manual, compartilhadas entre formulário e servidor.
-- `src/lib/economiza/api.functions.ts` — funções de servidor `searchProducts`, `searchFuel`, `getApiStatus`.
-- `src/lib/economiza/proxy.server.ts` — só aceita `produto/pesquisa` e `combustivel/pesquisa`; timeout 15 s, 1 retentativa só para 5xx/429/rede, limite de 40 pesquisas/min por IP, cache.
-- `src/lib/economiza/adapter.ts` — compatibilização das respostas (ver abaixo).
-- `src/lib/economiza/compare.ts` — equivalência, cesta e concorrência limitada.
-- `src/lib/store.ts` — lista, favoritos e preferências em `localStorage` (sem login, sem sincronização).
+## Verificação
 
-### Cache
-Memória do servidor (por instância), TTL de 5 min, até 300 entradas. A chave inclui a operação e **todos** os campos do corpo, com chaves ordenadas. A interface indica quando o resultado veio do cache. Parâmetros em `constants.ts` (`CACHE`, `NET`).
+```bash
+npm test
+npm run typecheck
+npm run build
+```
 
-### Decisões do adaptador
-- Aceita `endereco` e `endereço` (o exemplo do manual usa acento; a tabela não).
-- Aceita `totalPaginas` e `totalPaginas ` (espaço no exemplo).
-- `gtin`, `ncm`, `cnpj`, `cep`, `codigoIBGE` são guardados como texto. Se a API enviar número, zeros à esquerda não podem ser recuperados.
-- `gpc = 0` significa “não classificado”.
-- Coordenadas `0,0` ou fora do intervalo são descartadas (sem distância).
-- Registros sem preço válido, data ou descrição são ocultados e contados.
-- `dataVenda` sem fuso é tratada como UTC e exibida em America/Maceio.
-- **Essas decisões ainda precisam ser validadas contra respostas reais**, que não puderam ser obtidas sem token/HTTPS.
+Listas, favoritos e preferências ficam no navegador. Os preços representam vendas passadas e não garantem preço ou estoque atual. Não é um aplicativo oficial do governo.
 
-## Modo real × demonstrativo
-O modo demonstrativo só é ligado por ação explícita (aviso nas telas ou “Sobre os dados”). Todas as telas de busca exibem a faixa “Modo demonstração: dados fictícios” e os resultados recebem o selo “fictícios”. Falhas reais nunca são trocadas por dados fictícios.
+## Validação desta entrega
 
-## Limitações da API
-- Dados de vendas dos últimos 10 dias; não há preço atual, estoque, histórico, imagens, promoções nem consulta de cesta.
-- A lista de compras faz uma pesquisa por item (3 em paralelo), com progresso e cancelamento.
-- Itens sem código de barras precisam ser associados a um produto para entrar no total.
-
-## Publicação
-O backend são funções de servidor do próprio app (Cloudflare Workers). Configure as duas variáveis como segredos do ambiente publicado. O cache e o limite de requisições são por instância (melhor esforço).
-
-## Testes executados
-- `bun run test`: 18 testes (validação de limites e exclusividade, zeros à esquerda, adaptador, fuso, moeda, equivalência, cesta com itens ausentes, chave de cache).
-- Verificação manual em navegador (desktop e 375 px): pesquisa em modo demo, seleção de município por teclado.
-
-## Pendências reais
-- Token e transporte HTTPS (dependem da SEFAZ/AL).
-- Validação do adaptador com respostas reais.
-- Auditoria automatizada de acessibilidade (axe) e revisão completa com leitor de tela ainda não executadas; não declaramos conformidade WCAG 2.2 AA.
+23 testes passaram, TypeScript sem erros e build de produção concluído. A chamada externa neste ambiente retornou HTTP 403 no endereço HTTP e 503 no HTTPS; portanto, a resposta real e a aceitação do token ainda precisam ser confirmadas no seu ambiente.

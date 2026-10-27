@@ -12,11 +12,11 @@ import { compareStore } from "@/lib/store";
 export const Route = createFileRoute("/comparar")({
   head: () => ({
     meta: [
-      { title: "Comparar preços — Economiza AL" },
+      { title: "Comparar preços — Arretado de Barato" },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "description", content: "Compare lado a lado até quatro preços registrados em estabelecimentos de Alagoas." },
-      { property: "og:title", content: "Comparar preços — Economiza AL" },
+      { property: "og:title", content: "Comparar preços — Arretado de Barato" },
       { property: "og:description", content: "Coloque até quatro resultados lado a lado e veja a diferença entre produtos equivalentes." },
     ],
   }),
