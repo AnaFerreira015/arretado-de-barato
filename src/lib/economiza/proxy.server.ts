@@ -89,11 +89,16 @@ export async function callApi(op: Operation, body: unknown, kind: "produto" | "c
     try {
       const res = await fetch(url, {
         method: "POST",
-        redirect: "error",
+        redirect: "manual",
         headers: { "Content-Type": "application/json", Accept: "application/json", appToken: token },
         body: JSON.stringify(body),
         signal: ctrl.signal,
       });
+      if (res.status >= 300 && res.status < 400) {
+        clearTimeout(timer);
+        await res.body?.cancel();
+        return fail("api_error", "O serviço retornou um redirecionamento não permitido.");
+      }
       const text = await res.text();
       clearTimeout(timer);
       let json: unknown = null;

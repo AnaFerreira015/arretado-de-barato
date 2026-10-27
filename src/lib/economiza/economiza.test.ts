@@ -171,9 +171,26 @@ describe("documented SEFAZ request", () => {
     vi.stubGlobal("fetch", fetchMock);
     try {
       const result = await callApi("produto/pesquisa", request.body, "produto");
-      expect(fetchMock).toHaveBeenCalledWith("http://api.sefaz.al.gov.br/sfz-economiza-alagoas-api/api/public/produto/pesquisa", expect.objectContaining({ method: "POST", headers: expect.objectContaining({ appToken: "test-token", "Content-Type": "application/json" }), body: JSON.stringify(request.body), redirect: "error" }));
+      expect(fetchMock).toHaveBeenCalledWith("http://api.sefaz.al.gov.br/sfz-economiza-alagoas-api/api/public/produto/pesquisa", expect.objectContaining({ method: "POST", headers: expect.objectContaining({ appToken: "test-token", "Content-Type": "application/json" }), body: JSON.stringify(request.body), redirect: "manual" }));
       expect(result.ok && result.page.items[0]?.valorVenda).toBe(1.57);
       expect(JSON.stringify(result)).not.toContain("test-token");
+    } finally { vi.unstubAllGlobals(); vi.unstubAllEnvs(); }
+  });
+});
+
+
+describe("redirect handling", () => {
+  it("rejects redirects without following them or exposing the destination", async () => {
+    vi.stubEnv("ECONOMIZA_APP_TOKEN", "test-token");
+    vi.stubEnv("ECONOMIZA_API_BASE_URL", "https://api.sefaz.al.gov.br/sfz-economiza-alagoas-api/api/public/");
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 302, headers: { Location: "https://other.invalid/private" } }));
+    vi.stubGlobal("fetch", fetchMock);
+    try {
+      const result = await callApi("produto/pesquisa", { produto: { descricao: "redirect-fixture" } }, "produto");
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      expect(fetchMock.mock.calls[0]?.[1].redirect).toBe("manual");
+      expect(result).toMatchObject({ ok: false, code: "api_error", detail: "O serviço retornou um redirecionamento não permitido." });
+      expect(JSON.stringify(result)).not.toContain("other.invalid");
     } finally { vi.unstubAllGlobals(); vi.unstubAllEnvs(); }
   });
 });
