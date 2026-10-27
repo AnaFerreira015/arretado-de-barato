@@ -10,7 +10,30 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "ECONOMIZA_");
   for (const [key, value] of Object.entries(env)) process.env[key] ??= value;
   return {
-    plugins: [tsconfigPaths(), tailwindcss(), tanstackStart({ server: { entry: "server" } }), nitro({ preset: "node-server" }), react()],
+    plugins: [
+      tsconfigPaths(),
+      tailwindcss(),
+      tanstackStart({ server: { entry: "server" } }),
+      nitro({
+        preset: "cloudflare_module",
+        cloudflare: {
+          deployConfig: true,
+          nodeCompat: true,
+          wrangler: {
+            name: "arretado-de-barato",
+            compatibility_date: "2026-10-27",
+            compatibility_flags: ["nodejs_compat"],
+            workers_dev: true,
+            vars: {
+              ECONOMIZA_API_BASE_URL:
+                "http://api.sefaz.al.gov.br/sfz-economiza-alagoas-api/api/public/",
+              ECONOMIZA_ALLOW_HTTP: "true",
+            },
+          },
+        },
+      }),
+      react(),
+    ],
     resolve: { dedupe: ["react", "react-dom", "@tanstack/react-router"] },
   };
 });
