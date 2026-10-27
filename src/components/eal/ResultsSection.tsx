@@ -33,6 +33,10 @@ export function ResultsSection<Q>({
   const minPrice = state.items.length ? Math.min(...state.items.map((i) => i.valorVenda)) : null;
   const total = state.meta?.totalRegistros ?? 0;
   const allLoaded = !!state.meta?.ultimaPagina;
+  const nameFiltered = !!state.meta?.nameFiltered;
+  const resultCount = nameFiltered
+    ? `${state.items.length} correspondências entre ${state.examinedCount} registros consultados.`
+    : `${state.items.length} de ${total} registros carregados`;
 
   const live =
     state.status === "loading"
@@ -41,8 +45,8 @@ export function ResultsSection<Q>({
         ? ""
         : state.status === "success"
           ? state.items.length
-            ? `${state.items.length} resultados carregados de ${total}.`
-            : "Nenhum resultado encontrado."
+            ? resultCount
+            : allLoaded ? "Nenhum resultado encontrado." : "Nenhuma correspondência nas páginas consultadas. Há mais páginas disponíveis."
           : "";
 
   return (
@@ -62,10 +66,10 @@ export function ResultsSection<Q>({
         </div>,
         document.body,
       )}
-      {state.status === "error" && state.error && !state.error.errors && (
+      {state.status === "error" && state.error && !state.error.errors && !state.meta && (
         <ErrorState message={state.error.message} detail={state.error.detail} onRetry={onRetry} />
       )}
-      {(state.status === "success" || state.status === "loadingMore" || (state.status === "error" && state.items.length > 0)) && (
+      {(state.status === "success" || state.status === "loadingMore" || (state.status === "error" && state.meta != null)) && (
         <>
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -74,7 +78,7 @@ export function ResultsSection<Q>({
                 {state.demo && <span className="ml-2 rounded bg-warning-soft px-2 py-0.5 text-sm text-warning-foreground">fictícios</span>}
               </h2>
               <p className="text-sm text-muted-foreground">
-                {state.items.length} de {total} registros carregados
+                {resultCount}
                 {state.fetchedAt && <> · consultado em {formatDateTime(state.fetchedAt)}{state.cached && " (resultado guardado há poucos minutos)"}</>}
               </p>
             </div>
@@ -96,6 +100,11 @@ export function ResultsSection<Q>({
               </div>
             )}
           </div>
+          {nameFiltered && (
+            <p className="text-sm text-muted-foreground">
+              Busca por palavras inteiras, sem diferenciar acentos ou maiúsculas. A SEFAZ informou {total} registros antes desse filtro.
+            </p>
+          )}
           {state.items.length > 0 && !allLoaded && (
             <p className="text-sm text-muted-foreground">
               A ordenação considera apenas os {state.items.length} resultados já carregados.
@@ -111,9 +120,9 @@ export function ResultsSection<Q>({
           {state.items.length === 0 ? (
             <div className="card-surface flex flex-col items-start gap-2 p-5">
               <p className="flex items-center gap-2 text-lg font-semibold">
-                <SearchX aria-hidden className="size-5" /> Nenhuma venda encontrada
+                <SearchX aria-hidden className="size-5" /> {allLoaded ? "Nenhuma venda correspondente encontrada" : "Nenhuma correspondência nas páginas consultadas"}
               </p>
-              <p>Tente aumentar o período, mudar o local ou usar outras palavras (por exemplo, abreviações como “LTE” para leite).</p>
+              <p>{allLoaded ? "Tente mudar o período, o local ou as palavras da pesquisa." : "Use Carregar mais para consultar a próxima página de resultados da SEFAZ."}</p>
             </div>
           ) : (
             <ul className="space-y-3">
@@ -133,17 +142,17 @@ export function ResultsSection<Q>({
             </ul>
           )}
 
-          {state.status === "error" && state.error && state.items.length > 0 && (
+          {state.status === "error" && state.error && state.meta != null && (
             <ErrorState message={state.error.message} onRetry={onLoadMore} />
           )}
-          {!allLoaded && state.items.length > 0 && (
+          {!allLoaded && (
             <div className="flex flex-col items-center gap-1">
               <Button variant="outline" size="lg" onClick={onLoadMore} disabled={state.status === "loadingMore"}>
                 {state.status === "loadingMore" ? <Loader2 aria-hidden className="animate-spin" /> : null}
                 {state.status === "loadingMore" ? "Carregando…" : "Carregar mais"}
               </Button>
               <p className="text-sm text-muted-foreground">
-                {state.items.length} de {total} carregados
+                {resultCount}
               </p>
             </div>
           )}

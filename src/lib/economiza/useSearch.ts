@@ -12,6 +12,7 @@ export type SearchState<Q> = {
   items: SaleRecord[];
   meta: Omit<SearchPage, "items" | "invalidCount"> | null;
   invalidCount: number;
+  examinedCount: number;
   fetchedAt: string | null;
   cached: boolean;
   demo: boolean;
@@ -20,7 +21,7 @@ export type SearchState<Q> = {
 };
 
 const empty = <Q,>(): SearchState<Q> => ({
-  status: "idle", query: null, items: [], meta: null, invalidCount: 0, fetchedAt: null,
+  status: "idle", query: null, items: [], meta: null, invalidCount: 0, examinedCount: 0, fetchedAt: null,
   cached: false, demo: false, origin: null, error: null,
 });
 
@@ -65,6 +66,7 @@ export function useSearchRunner<Q extends { pagina: number; place: Place }>(
         return {
           ...s, status: "success", query, items: merged, meta,
           invalidCount: (mode === "more" ? s.invalidCount : 0) + invalidCount,
+          examinedCount: (mode === "more" ? s.examinedCount : 0) + meta.registrosPagina,
           fetchedAt: res.fetchedAt, cached: res.cached, demo: res.demo, error: null,
         };
       });

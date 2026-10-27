@@ -39,6 +39,7 @@ export type SaleRecord = {
 };
 
 export type SearchPage = {
+  nameFiltered?: boolean;
   totalRegistros: number;
   totalPaginas: number;
   pagina: number;

@@ -1,6 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { MESSAGES } from "./constants";
 import { adaptPage } from "./adapter";
+import { filterProductPage } from "./productMatching";
 import {
   validateFuelQuery,
   validateProductQuery,
@@ -30,10 +31,11 @@ export const searchProducts = createServerFn({ method: "POST" })
     if (!v.ok) return { ok: false, code: "validation", message: MESSAGES.validation, errors: v.errors };
     if (data.demo === true) {
       const { demoProducts } = await import("./demo");
-      return { ok: true, page: adaptPage(demoProducts(v.body), "produto"), fetchedAt: new Date().toISOString(), cached: false, demo: true };
+      return { ok: true, page: filterProductPage(adaptPage(demoProducts(v.body), "produto"), v.body.produto.descricao), fetchedAt: new Date().toISOString(), cached: false, demo: true };
     }
     const { callApi } = await import("./proxy.server");
-    return callApi("produto/pesquisa", v.body, "produto");
+    const result = await callApi("produto/pesquisa", v.body, "produto");
+    return result.ok ? { ...result, page: filterProductPage(result.page, v.body.produto.descricao) } : result;
   });
 
 export const searchFuel = createServerFn({ method: "POST" })
