@@ -209,8 +209,8 @@ function ProductSearchPage() {
               Filtros avançados
             </Button>
           </CollapsibleTrigger>
-          <CollapsibleContent className="mt-3 grid gap-4 md:grid-cols-3">
-            <div>
+          <CollapsibleContent className="mt-3 grid gap-4 md:grid-cols-3 md:gap-y-0">
+            <div className="md:row-span-4 md:grid md:grid-rows-subgrid">
               <label htmlFor={ids.cnpj} className="block text-sm font-semibold">CNPJ do estabelecimento</label>
               <p className="text-sm text-muted-foreground">Número da empresa. Use os 8 primeiros dígitos (todas as filiais) ou os 14.</p>
               <Input id={ids.cnpj} inputMode="numeric" maxLength={14} value={form.cnpj}
@@ -218,7 +218,7 @@ function ProductSearchPage() {
                 aria-invalid={!!allErrors.cnpj} className="mt-1 min-h-11 border-2 border-input" />
               <FieldError message={allErrors.cnpj} />
             </div>
-            <div>
+            <div className="md:row-span-4 md:grid md:grid-rows-subgrid">
               <label htmlFor={ids.gpc} className="block text-sm font-semibold">Categoria (GPC)</label>
               <p className="text-sm text-muted-foreground">Restringe a busca por nome a um tipo de produto. Só vale para produtos com código de barras.</p>
               <select id={ids.gpc} value={form.gpc} onChange={(e) => set({ gpc: e.target.value })}
@@ -231,7 +231,7 @@ function ProductSearchPage() {
               </select>
               <FieldError message={allErrors.gpc} />
             </div>
-            <div>
+            <div className="md:row-span-4 md:grid md:grid-rows-subgrid">
               <label htmlFor={ids.ncm} className="block text-sm font-semibold">Código NCM</label>
               <p className="text-sm text-muted-foreground">Código fiscal de 8 números que aparece na nota. Só para busca por nome.</p>
               <Input id={ids.ncm} inputMode="numeric" maxLength={8} value={form.ncm}
