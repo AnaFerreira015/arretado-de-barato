@@ -205,3 +205,30 @@ it("does not retry a timed out search and double the waiting time", async () => 
     expect(fetchMock).toHaveBeenCalledTimes(1);
   } finally { vi.unstubAllGlobals(); vi.unstubAllEnvs(); }
 });
+
+describe("upstream diagnostics", () => {
+  it.each([429, 503])("reports HTTP %s without returning response bodies or credentials", async (status) => {
+    vi.stubEnv("ECONOMIZA_APP_TOKEN", "test-secret-token");
+    vi.stubEnv("ECONOMIZA_API_BASE_URL", "https://api.sefaz.al.gov.br/sfz-economiza-alagoas-api/api/public/");
+    vi.stubGlobal("fetch", vi.fn().mockImplementation(async () => new Response("private-response test-secret-token", { status })));
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const result = await callApi("produto/pesquisa", { diagnosticFixture: status }, "produto");
+      expect(result).toMatchObject({ ok: false, code: "unavailable", detail: `A API respondeu com HTTP ${status}.` });
+      expect(warn).toHaveBeenCalledWith("[economiza] upstream_http", expect.objectContaining({ status, operation: "produto/pesquisa" }));
+      expect(JSON.stringify([result, warn.mock.calls])).not.toMatch(/private-response|test-secret-token/);
+    } finally { warn.mockRestore(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); }
+  });
+  it("reports an allowlisted network cause without logging raw exceptions", async () => {
+    vi.stubEnv("ECONOMIZA_APP_TOKEN", "test-secret-token");
+    vi.stubEnv("ECONOMIZA_API_BASE_URL", "https://api.sefaz.al.gov.br/sfz-economiza-alagoas-api/api/public/");
+    vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new TypeError("private test-secret-token", { cause: { code: "ENOTFOUND" } })));
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    try {
+      const result = await callApi("produto/pesquisa", { diagnosticFixture: "network" }, "produto");
+      expect(result).toMatchObject({ ok: false, code: "unavailable", detail: "Falha de conexão com a API (ENOTFOUND)." });
+      expect(warn).toHaveBeenCalledWith("[economiza] upstream_exception", expect.objectContaining({ causeCode: "ENOTFOUND", errorName: "TypeError" }));
+      expect(JSON.stringify([result, warn.mock.calls])).not.toMatch(/private|test-secret-token/);
+    } finally { warn.mockRestore(); vi.unstubAllGlobals(); vi.unstubAllEnvs(); }
+  });
+});

@@ -70,6 +70,18 @@ function rateLimited(): boolean {
 
 const fail = (code: ErrorCode, detail?: string): ProxyResult => ({ ok: false, code, message: MESSAGES[code], detail });
 
+// Only fixed diagnostic codes are logged; never raw messages, bodies or headers.
+function networkDiagnostic(error: unknown) {
+  const value = error && typeof error === "object" ? error as { name?: unknown; code?: unknown; cause?: unknown } : {};
+  const cause = value.cause && typeof value.cause === "object" ? value.cause as { code?: unknown } : {};
+  const rawCode = cause.code ?? value.code;
+  const allowedCodes = ["ENOTFOUND", "EAI_AGAIN", "ECONNREFUSED", "ECONNRESET", "ETIMEDOUT", "EHOSTUNREACH", "ENETUNREACH", "UND_ERR_CONNECT_TIMEOUT", "UND_ERR_HEADERS_TIMEOUT", "UND_ERR_SOCKET", "CERT_HAS_EXPIRED", "DEPTH_ZERO_SELF_SIGNED_CERT", "UNABLE_TO_VERIFY_LEAF_SIGNATURE"];
+  const causeCode = typeof rawCode === "string" && allowedCodes.includes(rawCode) ? rawCode : "UNKNOWN";
+  const errorName = typeof value.name === "string" && ["Error", "TypeError", "AbortError", "TimeoutError"].includes(value.name) ? value.name : "Error";
+  return { errorName, causeCode };
+}
+
+
 export async function callApi(op: Operation, body: unknown, kind: "produto" | "combustivel"): Promise<ProxyResult> {
   if (rateLimited()) return fail("rate_limited");
   const status = apiStatus();
@@ -84,6 +96,7 @@ export async function callApi(op: Operation, body: unknown, kind: "produto" | "c
   const token = process.env["ECONOMIZA_APP_TOKEN"]!;
 
   for (let attempt = 0; attempt <= NET.retries; attempt++) {
+    const startedAt = Date.now();
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), NET.timeoutMs);
     try {
@@ -94,6 +107,9 @@ export async function callApi(op: Operation, body: unknown, kind: "produto" | "c
         body: JSON.stringify(body),
         signal: ctrl.signal,
       });
+      if (!res.ok) {
+        console.warn("[economiza] upstream_http", { operation: op, attempt: attempt + 1, status: res.status, elapsedMs: Date.now() - startedAt });
+      }
       if (res.status >= 300 && res.status < 400) {
         clearTimeout(timer);
         await res.body?.cancel();
@@ -117,7 +133,7 @@ export async function callApi(op: Operation, body: unknown, kind: "produto" | "c
           await new Promise((r) => setTimeout(r, NET.retryDelayMs));
           continue;
         }
-        return fail("unavailable");
+        return fail("unavailable", `A API respondeu com HTTP ${res.status}.`);
       }
       if (!res.ok) return fail("api_error", apiMsg);
       try {
@@ -136,17 +152,16 @@ export async function callApi(op: Operation, body: unknown, kind: "produto" | "c
     } catch (e) {
       clearTimeout(timer);
       const isAbort = ctrl.signal.aborted || (e != null && typeof e === "object" && "name" in e && e.name === "AbortError");
+      const diagnostic = networkDiagnostic(e);
+      console.warn("[economiza] upstream_exception", { operation: op, attempt: attempt + 1, elapsedMs: Date.now() - startedAt, ...diagnostic, timedOut: isAbort });
       if (isAbort) {
-        console.warn(`[economiza] ${op} failed: timeout`);
         return fail("timeout");
       }
       if (attempt < NET.retries) {
         await new Promise((r) => setTimeout(r, NET.retryDelayMs));
         continue;
       }
-      // Log without token, body or coordinates.
-      console.warn(`[economiza] ${op} failed: ${isAbort ? "timeout" : "network"}`);
-      return fail(isAbort ? "timeout" : "unavailable");
+      return fail("unavailable", `Falha de conexão com a API (${diagnostic.causeCode}).`);
     }
   }
   return fail("unavailable");

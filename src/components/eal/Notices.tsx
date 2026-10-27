@@ -60,7 +60,7 @@ export function ErrorState({ message, detail, onRetry }: { message: string; deta
         <AlertTriangle aria-hidden className="mt-0.5 size-5 shrink-0" />
         {message}
       </p>
-      {detail && <p className="text-sm text-muted-foreground">Mensagem do serviço: “{detail}”</p>}
+      {detail && <p className="text-sm text-muted-foreground">Detalhes: {detail}</p>}
       {onRetry && (
         <Button variant="outline" className="self-start" onClick={onRetry}>
           <RefreshCw aria-hidden /> Tentar novamente
