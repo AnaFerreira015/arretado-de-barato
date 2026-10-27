@@ -194,3 +194,14 @@ describe("redirect handling", () => {
     } finally { vi.unstubAllGlobals(); vi.unstubAllEnvs(); }
   });
 });
+
+it("does not retry a timed out search and double the waiting time", async () => {
+  vi.stubEnv("ECONOMIZA_APP_TOKEN", "test-token");
+  vi.stubEnv("ECONOMIZA_API_BASE_URL", "https://api.sefaz.al.gov.br/sfz-economiza-alagoas-api/api/public/");
+  const fetchMock = vi.fn().mockRejectedValue(new DOMException("Timed out", "AbortError"));
+  vi.stubGlobal("fetch", fetchMock);
+  try {
+    expect(await callApi("produto/pesquisa", { descricao: "timeout-fixture" }, "produto")).toMatchObject({ ok: false, code: "timeout" });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  } finally { vi.unstubAllGlobals(); vi.unstubAllEnvs(); }
+});

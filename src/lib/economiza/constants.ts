@@ -16,6 +16,7 @@ export const LIMITS = {
   registrosMin: 50,
   registrosMax: 5000,
   registrosDefault: 100,
+  registrosGeo: 50,
   diasDefault: 7,
   raioDefault: 5,
   compareMax: 4,

@@ -135,7 +135,11 @@ export async function callApi(op: Operation, body: unknown, kind: "produto" | "c
       }
     } catch (e) {
       clearTimeout(timer);
-      const isAbort = e instanceof Error && e.name === "AbortError";
+      const isAbort = ctrl.signal.aborted || (e != null && typeof e === "object" && "name" in e && e.name === "AbortError");
+      if (isAbort) {
+        console.warn(`[economiza] ${op} failed: timeout`);
+        return fail("timeout");
+      }
       if (attempt < NET.retries) {
         await new Promise((r) => setTimeout(r, NET.retryDelayMs));
         continue;

@@ -58,7 +58,7 @@ function ProductSearchPage() {
       place,
       dias: f.dias,
       pagina,
-      registrosPorPagina: LIMITS.registrosDefault,
+      registrosPorPagina: place.tipo === "geolocalizacao" ? LIMITS.registrosGeo : LIMITS.registrosDefault,
     };
   };
 
