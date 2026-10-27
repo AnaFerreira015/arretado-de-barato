@@ -1,4 +1,5 @@
 import { useId, useMemo, useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { Loader2, SearchX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { SaleRecord } from "@/lib/economiza/adapter";
@@ -35,7 +36,7 @@ export function ResultsSection<Q>({
 
   const live =
     state.status === "loading"
-      ? "Pesquisando…"
+      ? `Pesquisando ${kindLabel}…`
       : state.status === "error"
         ? ""
         : state.status === "success"
@@ -49,10 +50,17 @@ export function ResultsSection<Q>({
       <p className="sr-only" role="status" aria-live="polite">
         {live}
       </p>
-      {state.status === "loading" && (
-        <div className="card-surface flex items-center gap-3 p-4" aria-hidden>
-          <Loader2 className="size-5 animate-spin text-primary" /> Pesquisando {kindLabel}…
-        </div>
+      {state.status === "loading" && typeof document !== "undefined" && createPortal(
+        <div
+          className="pointer-events-none fixed inset-0 z-50 grid place-items-center bg-background/50 p-4 backdrop-blur-sm"
+          aria-hidden="true"
+        >
+          <div className="flex w-full max-w-sm flex-col items-center gap-4 rounded-2xl border bg-card p-8 text-center text-card-foreground shadow-xl">
+            <Loader2 className="size-9 animate-spin text-primary motion-reduce:animate-none" />
+            <p className="text-lg font-semibold">Pesquisando {kindLabel}…</p>
+          </div>
+        </div>,
+        document.body,
       )}
       {state.status === "error" && state.error && !state.error.errors && (
         <ErrorState message={state.error.message} detail={state.error.detail} onRetry={onRetry} />
