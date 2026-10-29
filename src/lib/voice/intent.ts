@@ -23,7 +23,7 @@ export function parseCommand(text: string): Command | null {
 
 function numbers(text: string) {
   const map: Record<string, string> = { um: "1", uma: "1", dois: "2", duas: "2", tres: "3", quatro: "4", cinco: "5", seis: "6", sete: "7", oito: "8", nove: "9", dez: "10", meio: "0,5", quinhentos: "500" };
-  return normalize(text).replace(/\b(um|uma|dois|duas|tres|quatro|cinco|seis|sete|oito|nove|dez|meio|quinhentos)\b/g, (word) => map[word]);
+  return normalize(text).replace(/\b(um|uma|dois|duas|tres|quatro|cinco|seis|sete|oito|nove|dez|meio|quinhentos)\b/g, (word) => map[word] ?? word);
 }
 const sizePattern = /(?<![\p{L}\d])\d+(?:[.,]\d+)?\s*(?:mililitros?|ml|litros?|lts?|l|quilogramas?|quilos?|kgs?|gramas?|grs?|g)(?!\p{L})/gu;
 export const isMultipack = (text: string) => /\b(?:pack|kit|fardo)\b|\d\s*[x×]\s*\d|\b(?:c\/|com\s+)\d+\s*(?:un|garraf|lata)|\b[2-9]\d*\s*(?:un\b|unidades\b)/i.test(normalize(text));
@@ -32,9 +32,9 @@ export function parseSize(text: string): { amount: number; unit: "ml" | "g" } | 
   if (isMultipack(normalized)) return null;
   const matches = normalized.match(sizePattern);
   if (matches?.length !== 1) return null;
-  const match = matches[0].match(/^(\d+(?:[.,]\d+)?)\s*(.*)$/)!;
-  const amount = Number(match[1].replace(",", "."));
-  const unit = match[2];
+  const match = matches[0]!.match(/^(\d+(?:[.,]\d+)?)\s*(.*)$/)!;
+  const amount = Number(match[1]!.replace(",", "."));
+  const unit = match[2]!;
   if (amount <= 0) return null;
   if (/^(?:mililitro|ml)/.test(unit)) return { amount, unit: "ml" };
   if (/^(?:l)/.test(unit)) return { amount: amount * 1000, unit: "ml" };
