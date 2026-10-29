@@ -5,13 +5,37 @@ export const normalize = (text: string) =>
   text.normalize("NFD").replace(/\p{M}/gu, "").toLocaleLowerCase("pt-BR").trim();
 
 const commands = {
-  next: ["proximo", "proximo resultado"],
-  more: ["carregar mais", "carregar mais resultados"],
-  stop: ["parar", "parar leitura", "cancelar"],
-  repeat: ["repetir"],
+  next: [
+    "proximo",
+    "proximo resultado",
+    "mostra outro",
+    "mostrar outro",
+    "outro resultado",
+    "quero ver outro",
+    "me mostre outro",
+  ],
+  more: [
+    "carregar mais",
+    "carregar mais resultados",
+    "mais resultados",
+    "mostra mais",
+    "mostrar mais",
+  ],
+  stop: ["parar", "parar leitura", "cancelar", "pare", "pode parar", "chega", "cancela"],
+  repeat: ["repetir", "repete", "pode repetir", "repita", "fale de novo", "nao entendi"],
   help: ["ajuda"],
-  confirm: ["confirmar", "confirmar busca", "pesquisar"],
-  restart: ["nova busca", "recomecar"],
+  confirm: [
+    "confirmar",
+    "confirmar busca",
+    "pesquisar",
+    "pode buscar",
+    "pode pesquisar",
+    "sim pode pesquisar",
+    "sim pode buscar",
+    "pode confirmar",
+    "sim confirmar",
+  ],
+  restart: ["nova busca", "recomecar", "quero comecar de novo", "comecar de novo"],
   editProduct: ["corrigir", "corrigir produto", "corrigir combustível", "corrigir combustivel"],
   editSize: ["corrigir embalagem"],
   editVariant: ["corrigir variante"],
@@ -23,7 +47,13 @@ const commands = {
 } as const;
 export type Command = keyof typeof commands;
 export function parseCommand(text: string): Command | null {
-  const cleaned = normalize(text).replace(/[.!?]+$/g, "");
+  const cleaned = normalize(text)
+    .replace(/[.!?]+$/g, "")
+    .replace(/,?\s+por favor$/, "")
+    .replace(/^por favor[, ]+/, "")
+    .replace(/,/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
   for (const [key, values] of Object.entries(commands)) {
     if ((values as readonly string[]).includes(cleaned)) return key as Command;
   }

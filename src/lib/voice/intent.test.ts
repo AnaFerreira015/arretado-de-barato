@@ -33,3 +33,16 @@ describe("pedidos guiados", () => {
     expect(resolveMunicipio("Recife")).toBeNull();
   });
 });
+
+it.each([
+  ["Pode buscar, por favor", "confirm"],
+  ["sim, pode pesquisar", "confirm"],
+  ["mostra outro", "next"],
+  ["pode repetir por favor?", "repeat"],
+  ["quero começar de novo", "restart"],
+  ["pode parar", "stop"],
+])("entende comando natural %s", (text, command) => expect(parseCommand(text)).toBe(command));
+it("negação não confirma", () => {
+  expect(parseCommand("não pode pesquisar")).toBeNull();
+  expect(parseCommand("não quero confirmar")).toBeNull();
+});
