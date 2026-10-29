@@ -352,7 +352,7 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
     const intent = parsed.data;
     const draft: Draft = {
       ...newDraft(intent.tipoBusca),
-      tipoCombustivel: intent.tipoCombustivel,
+      tipoCombustivel: intent.esclarecer ? null : intent.tipoCombustivel,
       descricao: intent.descricao ?? "",
       embalagem: intent.embalagem ?? "",
       variante: intent.variante ?? "",
@@ -369,6 +369,11 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
           : "size",
       draft,
     );
+    if (intent.esclarecer && draft.mode === "combustivel")
+      announce(
+        `O pedido precisa de esclarecimento. Vamos pesquisar um combustível por vez. ${promptFor("fuel", draft)}`,
+        true,
+      );
     if (intent.esclarecer && draft.mode === "produto")
       announce(
         "O pedido precisa de esclarecimento. Vamos pesquisar um produto por vez. Qual produto?",
@@ -446,7 +451,7 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
     }
     if (command === "help") {
       announce(
-        "Use Falar ou digite sua resposta e pressione Enviar. Comandos: confirmar busca, corrigir produto, corrigir embalagem, corrigir variante, corrigir município, corrigir raio, corrigir período, ouvir resultados, próximo, carregar mais, repetir, parar e nova busca.",
+        "Use Falar ou digite sua resposta e pressione Enviar. Comandos: confirmar busca, buscar produtos, buscar combustíveis, corrigir combustível, corrigir produto, corrigir embalagem, corrigir variante, corrigir município, corrigir raio, corrigir período, ouvir resultados, próximo, carregar mais, repetir, parar e nova busca.",
       );
       return;
     }
@@ -456,7 +461,7 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
       const fuel =
         normalized === "manter" && draft.mode === "combustivel"
           ? { tipo: draft.tipoCombustivel, municipio: draft.municipio || null }
-          : parseFuelRequest(value);
+          : parseFuelRequest(value, draft.mode === "combustivel");
       if (fuel || stage === "fuel") {
         invalidate();
         const next: Draft = {

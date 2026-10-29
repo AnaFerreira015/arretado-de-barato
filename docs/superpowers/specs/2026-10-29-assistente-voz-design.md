@@ -85,3 +85,7 @@ Nomes internos dos módulos, composição dos componentes, parser sem dependênc
 - https://developers.cloudflare.com/workers-ai/get-started/rest-api/
 - https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition
 - https://webllm.mlc.ai/
+
+## Extensão posterior aprovada
+
+Em 29/10/2026, a usuária solicitou e aprovou o suporte a combustíveis. Essa extensão substitui a exclusão inicial de combustíveis deste desenho e está documentada em `../plans/2026-10-29-voz-combustiveis.md`.

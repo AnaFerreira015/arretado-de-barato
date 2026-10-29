@@ -270,22 +270,20 @@ it("gasolina ambígua exige tipo e troca de modo descarta resposta tardia", asyn
   expect(h.result.current.state.stage).toBe("product");
 });
 it("IA identifica combustível e exige confirmação do tipo e local", async () => {
-  const interpret = vi
-    .fn()
-    .mockResolvedValue({
-      ok: true,
-      intent: {
-        tipoBusca: "combustivel",
-        tipoCombustivel: 6,
-        descricao: null,
-        embalagem: null,
-        variante: null,
-        municipio: "Maceió",
-        raio: null,
-        dias: null,
-        esclarecer: false,
-      },
-    });
+  const interpret = vi.fn().mockResolvedValue({
+    ok: true,
+    intent: {
+      tipoBusca: "combustivel",
+      tipoCombustivel: 6,
+      descricao: null,
+      embalagem: null,
+      variante: null,
+      municipio: "Maceió",
+      raio: null,
+      dias: null,
+      esclarecer: false,
+    },
+  });
   const searchFuel = vi.fn();
   const h = renderHook(() => useVoiceAssistant({ interpret, searchFuel }));
   await act(async () => {
@@ -298,4 +296,47 @@ it("IA identifica combustível e exige confirmação do tipo e local", async () 
     await h.result.current.answer("manter");
   });
   expect(h.result.current.state.stage).toBe("confirm");
+});
+
+it("preserva álcool como produto e reconhece o sinônimo no modo combustível", async () => {
+  const h = renderHook(() => useVoiceAssistant());
+  await act(async () => {
+    await h.result.current.answer("álcool");
+  });
+  expect(h.result.current.state.draft.mode).toBe("produto");
+  expect(h.result.current.state.stage).toBe("size");
+  act(() => h.result.current.setMode("combustivel"));
+  await act(async () => {
+    await h.result.current.answer("álcool");
+  });
+  expect(h.result.current.state.draft.tipoCombustivel).toBe(3);
+});
+it("esclarecimento da IA exige nova escolha de um combustível", async () => {
+  const interpret = vi.fn().mockResolvedValue({
+    ok: true,
+    intent: {
+      tipoBusca: "combustivel",
+      tipoCombustivel: 1,
+      descricao: null,
+      embalagem: null,
+      variante: null,
+      municipio: "Maceió",
+      raio: null,
+      dias: null,
+      esclarecer: true,
+    },
+  });
+  const searchFuel = vi.fn();
+  const h = renderHook(() => useVoiceAssistant({ interpret, searchFuel }));
+  await act(async () => {
+    await h.result.current.interpret("gasolina e etanol em Maceió");
+  });
+  expect(h.result.current.state.draft.tipoCombustivel).toBeNull();
+  expect(h.result.current.state.message).toContain("um combustível por vez");
+  await act(async () => {
+    await h.result.current.answer("manter");
+    await h.result.current.answer("confirmar");
+  });
+  expect(searchFuel).not.toHaveBeenCalled();
+  expect(h.result.current.state.stage).toBe("fuel");
 });

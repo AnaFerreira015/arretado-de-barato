@@ -56,3 +56,21 @@ Limites desta validação: não foi possível testar microfone real, NVDA, Voice
 6. Testar IA com credenciais, sem elas, com cota esgotada e timeout. Manter possibilidade de continuar guiado. Não confundir falha de IA com falha da SEFAZ.
 
 Referências: [REST Workers AI](https://developers.cloudflare.com/workers-ai/get-started/rest-api/), [modelo FP8](https://developers.cloudflare.com/workers-ai/models/llama-3.1-8b-instruct-fp8/), [preços e cotas](https://developers.cloudflare.com/workers-ai/platform/pricing/), [SpeechRecognition](https://developer.mozilla.org/en-US/docs/Web/API/SpeechRecognition).
+
+## Extensão para combustíveis
+
+Depois de aplicar `assistente-voz.patch`, aplique `assistente-voz-combustiveis.patch` com `git am --3way /caminho/assistente-voz-combustiveis.patch`. Esta extensão reutiliza as credenciais Workers AI já documentadas; não exige nova configuração nem dependências.
+
+Na página de combustíveis, clique em **Assistente de voz — buscar combustíveis**, ou escolha **Combustíveis** no assistente. O acesso direto é `/assistente?modo=combustivel`. Exemplos guiados:
+
+- “Buscar gasolina comum mais barata em Maceió”.
+- “Etanol”; depois informe o município ou solicite localização.
+- “Diesel S10” ou “GNV”.
+
+“Gasolina” e “diesel” sem qualificador exigem escolha do tipo. Para corrigir, diga “corrigir combustível”. “Buscar produtos” e “buscar combustíveis” trocam o modo, descartando a consulta anterior. A nova busca mantém o modo escolhido. Em pedidos livres, a IA propõe o tipo e você o confirma antes da consulta. Embalagem e variante de produtos não são pedidas no modo combustível.
+
+A comparação preserva a precisão de até três casas decimais. Líquidos são comparados por litro e GNV por metro cúbico; registros com unidade desconhecida ou incompatível ficam fora da ordenação. São os menores valores entre os registros carregados, não uma garantia de menor preço atual em toda a região. A busca original de combustíveis permanece disponível.
+
+Inclua na verificação manual: trocar de modo com consulta pendente, negar GPS, corrigir tipo, consultar GNV e conferir a unidade falada, carregar mais/repetir uma página que falhou. Testes automatizados não substituem a validação com microfone e leitor de tela reais.
+
+Validação desta extensão (29/10/2026): 102 testes passaram, TypeScript e build aprovados, lint dos módulos do assistente sem erros. A revisão independente identificou e os testes de regressão cobriram a preservação de “álcool” no modo produtos e o esclarecimento obrigatório de pedidos ambíguos da IA. Permanecem as limitações de validação real de voz, leitores de tela e APIs externas descritas acima.

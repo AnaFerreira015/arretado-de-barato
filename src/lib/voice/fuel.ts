@@ -20,12 +20,14 @@ const aliases: Record<string, number> = {
 };
 export function parseFuelRequest(
   text: string,
+  fuelMode = false,
 ): { tipo: number | null; municipio: string | null } | null {
   const clean = normalize(text)
     .replace(/^(?:buscar|pesquisar|procurar)\s+/, "")
     .replace(/[.!?]+$/, "");
   const [raw, place] = clean.split(/\s+em\s+/);
   const name = (raw ?? "").replace(/\s+mais\s+barat[oa]$/, "").trim();
+  if (name === "alcool" && !fuelMode) return null;
   const tipo = aliases[name] ?? null;
   if (!tipo && !/^(?:gasolina|diesel|etanol|gnv|gas natural veicular)(?:\s|$)/.test(name))
     return null;
