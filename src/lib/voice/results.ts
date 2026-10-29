@@ -1,6 +1,8 @@
 import type { SaleRecord } from "@/lib/economiza/adapter";
-import { formatBRL, formatDateTime } from "@/lib/economiza/format";
+import { formatDateTime } from "@/lib/economiza/format";
 import { hasSizeMention, isMultipack, normalize, parseSize, type ProductIntent } from "./intent";
+
+import { voicePrice } from "./fuel";
 
 function wordsMatch(text: string, query: string) {
   const words = new Set(normalize(text).match(/[\p{L}\p{N}]+/gu) ?? []);
@@ -44,5 +46,5 @@ export function describeRecord(record: SaleRecord, index: number, demo: boolean)
   ]
     .filter(Boolean)
     .join(", ");
-  return `${demo ? "Dados demonstrativos. " : ""}Resultado ${index}. ${record.descricaoSefaz || record.descricao}. ${formatBRL(record.valorVenda)}. ${record.store.nome}. ${address || "Endereço não informado"}. Venda registrada em ${formatDateTime(record.dataVendaUtc)}. Preço passado, sujeito a mudança; estoque não confirmado.`;
+  return `${demo ? "Dados demonstrativos. " : ""}Resultado ${index}. ${record.descricaoSefaz || record.descricao}. ${voicePrice(record)}. ${record.store.nome}. ${address || "Endereço não informado"}. Venda registrada em ${formatDateTime(record.dataVendaUtc)}. Preço passado, sujeito a mudança; estoque não confirmado.`;
 }

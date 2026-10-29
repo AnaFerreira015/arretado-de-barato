@@ -1,7 +1,8 @@
 import { aiIntentSchema, voiceTextSchema, type InterpretResponse } from "./ai.schema";
 
-const SYSTEM = `Extraia um pedido de pesquisa de um único produto em Alagoas. Retorne somente JSON com estas chaves:
-{"descricao":string|null,"embalagem":string|null,"variante":string|null,"municipio":string|null,"raio":number|null,"dias":number|null,"esclarecer":boolean}.
+const SYSTEM = `Extraia um pedido de pesquisa de um único produto ou combustível em Alagoas. Retorne somente JSON com estas chaves:
+{"tipoBusca":"produto"|"combustivel","tipoCombustivel":number|null,"descricao":string|null,"embalagem":string|null,"variante":string|null,"municipio":string|null,"raio":number|null,"dias":number|null,"esclarecer":boolean}.
+Para combustível use tipoBusca="combustivel", embalagem=null, variante=null. tipoCombustivel segue exatamente o catálogo: 1 gasolina comum, 2 gasolina aditivada, 3 etanol, 4 diesel comum, 5 diesel aditivado (S10), 6 GNV. Gasolina ou diesel sem qualificador: tipoCombustivel=null e esclarecer=true. Não escolha um tipo por conta própria. Para produto, tipoCombustivel=null.
 descricao é o nome ou marca, de 3 a 50 caracteres, sem tamanho nem variante. embalagem é tamanho explícito como "2 litros"; variante como "zero" ou "sem lactose".
 Extraia apenas o que está explícito no pedido. Não invente marca, município, quantidade, raio ou período; ausentes são null. Não transforme "perto de mim" em município.
 Não substitua marca nem variante. Se houver vários produtos, pedido fora do escopo ou dúvida, esclarecer=true; não descarte parte do pedido para fingir certeza.

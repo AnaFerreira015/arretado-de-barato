@@ -12,7 +12,7 @@ const commands = {
   help: ["ajuda"],
   confirm: ["confirmar", "confirmar busca", "pesquisar"],
   restart: ["nova busca", "recomecar"],
-  editProduct: ["corrigir", "corrigir produto"],
+  editProduct: ["corrigir", "corrigir produto", "corrigir combustível", "corrigir combustivel"],
   editSize: ["corrigir embalagem"],
   editVariant: ["corrigir variante"],
   editPlace: ["corrigir municipio", "corrigir local"],

@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { searchProducts, type SearchResponse } from "@/lib/economiza/api.functions";
+import { searchProducts, searchFuel, type SearchResponse } from "@/lib/economiza/api.functions";
 import type { SaleRecord, SearchPage } from "@/lib/economiza/adapter";
 import {
   validateDescricao,
   validateProductQuery,
+  validateFuelQuery,
+  type FuelQuery,
   type ProductQuery,
 } from "@/lib/economiza/validation";
 import { prefsStore } from "@/lib/store";
@@ -19,10 +21,18 @@ import {
   promptFor,
   queryFor,
   type Draft,
+  type SearchMode,
   type Stage,
 } from "./flow";
 
+import { parseFuelRequest, rankFuelRecords } from "./fuel";
+
+function rankDraft(records: SaleRecord[], draft: Draft) {
+ return draft.mode === "combustivel" ? rankFuelRecords(records, draft.tipoCombustivel ?? 0) : rankVoiceRecords(records, draft);
+}
+
 type Services = {
+  searchFuel(args: { data: { query: FuelQuery; demo: boolean } }): Promise<SearchResponse>;
   search(args: { data: { query: ProductQuery; demo: boolean } }): Promise<SearchResponse>;
   interpret(args: { data: { text: string } }): Promise<InterpretResponse>;
   locate(): Promise<{ lat: number; lng: number }>;
@@ -40,8 +50,8 @@ function locate(): ReturnType<Services["locate"]> {
     );
   });
 }
-const defaults: Services = { search: searchProducts, interpret: interpretVoice, locate };
-type Confirmed = { query: ProductQuery; intent: ProductIntent; demo: boolean };
+const defaults: Services = { search: searchProducts, searchFuel, interpret: interpretVoice, locate };
+type Confirmed = { query: ProductQuery | FuelQuery; intent: Draft; demo: boolean };
 type State = {
   draft: Draft;
   stage: Stage;
@@ -61,11 +71,11 @@ type State = {
   confirmed: Confirmed | null;
   resultDemo: boolean;
 };
-const initial = (): State => ({
-  draft: newDraft(),
-  stage: "product",
+const initial = (mode: SearchMode): State => ({
+  draft: newDraft(mode),
+  stage: mode === "combustivel" ? "fuel" : "product",
   busy: null,
-  message: promptFor("product", newDraft()),
+  message: promptFor(mode === "combustivel" ? "fuel" : "product", newDraft(mode)),
   error: null,
   transcript: "",
   aiAttempts: 0,
@@ -81,8 +91,8 @@ const initial = (): State => ({
   resultDemo: false,
 });
 
-export function useVoiceAssistant(overrides: Partial<Services> = {}) {
-  const [state, setState] = useState(initial);
+export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: SearchMode = "produto") {
+  const [state, setState] = useState(() => initial(mode));
   const current = useRef(state);
   const services = useRef({ ...defaults, ...overrides });
   services.current = { ...defaults, ...overrides };
@@ -107,6 +117,10 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}) {
     request.current++;
     speech.current?.stop();
     update({ busy: null, confirmed: null, items: [], meta: null, examined: 0, selected: 0 });
+  }
+  function setMode(mode: SearchMode) {
+    invalidate();
+    advance(mode === "combustivel" ? "fuel" : "product", newDraft(mode));
   }
   function stop() {
     request.current++;
@@ -142,7 +156,7 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}) {
 
   function getResults() {
     const s = current.current;
-    return s.confirmed ? rankVoiceRecords(s.items, s.confirmed.intent) : [];
+    return s.confirmed ? rankDraft(s.items, s.confirmed.intent) : [];
   }
   function readResults(next = false) {
     const results = getResults();
@@ -160,7 +174,7 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}) {
       : results.slice(0, 3).map((r, i) => describeRecord(r, i + 1, s.resultDemo));
     const intro = next
       ? ""
-      : `Até três menores preços entre os registros carregados. ${s.confirmed?.intent.embalagem ? "" : "Os tamanhos podem variar. "}`;
+      : `Até três menores preços entre os registros carregados. ${s.confirmed?.intent.mode === "combustivel" || s.confirmed?.intent.embalagem ? "" : "Os tamanhos podem variar. "}`;
     const text = intro + texts.join(" ");
     narration.current = text;
     update({
@@ -189,17 +203,18 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}) {
       announce("O modo demonstrativo mudou. Confirme uma nova busca para não misturar os dados.");
       return;
     }
+    if (s.draft.mode === "combustivel" && !s.draft.tipoCombustivel) { advance("fuel"); return; }
     const query = more ? { ...s.confirmed!.query, pagina: s.meta!.pagina + 1 } : queryFor(s.draft);
     if (!query) {
       advance("place");
       return;
     }
-    const validated = validateProductQuery(query);
+    const validated = "tipoCombustivel" in query ? validateFuelQuery(query) : validateProductQuery(query);
     if (!validated.ok) {
       announce(Object.values(validated.errors).join(" "), true);
       return;
     }
-    if (s.draft.embalagem && !parseSize(s.draft.embalagem)) {
+    if (s.draft.mode === "produto" && s.draft.embalagem && !parseSize(s.draft.embalagem)) {
       advance("size");
       return;
     }
@@ -207,11 +222,7 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}) {
       ? s.confirmed!
       : {
           query,
-          intent: {
-            descricao: s.draft.descricao,
-            embalagem: s.draft.embalagem,
-            variante: s.draft.variante,
-          },
+          intent: { ...s.draft },
           demo,
         };
     speech.current?.stop();
@@ -222,10 +233,12 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}) {
       confirmed,
       ...(more ? {} : { items: [], meta: null, examined: 0, selected: 0 }),
     });
-    announce("Pesquisando produtos. Você pode cancelar a consulta.");
+    announce(`Pesquisando ${s.draft.mode === "combustivel" ? "combustíveis" : "produtos"}. Você pode cancelar a consulta.`);
     let result: SearchResponse;
     try {
-      result = await services.current.search({ data: { query, demo } });
+      result = "tipoCombustivel" in query
+        ? await services.current.searchFuel({ data: { query, demo } })
+        : await services.current.search({ data: { query, demo } });
     } catch {
       result = {
         ok: false,
@@ -250,7 +263,7 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}) {
       resultDemo: result.demo,
     });
     const matches = getResults();
-    const summary = `${result.demo ? "Dados demonstrativos. " : ""}${matches.length} correspondências entre ${examined} registros consultados. ${matches.length ? "Mostrando até três menores preços entre os registros carregados." : "Nenhuma correspondência nas páginas carregadas."} ${confirmed.intent.embalagem ? "" : "Os tamanhos podem variar. "}${!result.page.ultimaPagina ? "Você pode carregar mais resultados." : "Última página."}`;
+    const summary = `${result.demo ? "Dados demonstrativos. " : ""}${matches.length} correspondências entre ${examined} registros consultados. ${matches.length ? "Mostrando até três menores preços entre os registros carregados." : "Nenhuma correspondência nas páginas carregadas."} ${confirmed.intent.mode === "combustivel" || confirmed.intent.embalagem ? "" : "Os tamanhos podem variar. "}${!result.page.ultimaPagina ? "Você pode carregar mais resultados." : "Última página."}`;
     announce(summary);
   }
   async function requestLocation() {
@@ -297,8 +310,8 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}) {
       busy: "ai",
       transcript: text,
       aiAttempts: current.current.aiAttempts + 1,
-      draft: newDraft(),
-      stage: "product",
+      draft: newDraft(current.current.draft.mode),
+      stage: current.current.draft.mode === "combustivel" ? "fuel" : "product",
     });
     announce("Interpretando pedido com IA. Você ainda vai conferir antes de pesquisar.");
     let result: InterpretResponse;
@@ -324,7 +337,8 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}) {
     }
     const intent = parsed.data;
     const draft: Draft = {
-      ...newDraft(),
+      ...newDraft(intent.tipoBusca),
+      tipoCombustivel: intent.tipoCombustivel,
       descricao: intent.descricao ?? "",
       embalagem: intent.embalagem ?? "",
       variante: intent.variante ?? "",
@@ -333,8 +347,8 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}) {
       dias: intent.dias ?? 7,
     };
     // Always walk through the fields again: partial interpretations must not silently drop restrictions.
-    advance(intent.esclarecer || !draft.descricao ? "product" : "size", draft);
-    if (intent.esclarecer)
+    advance(draft.mode === "combustivel" ? "fuel" : intent.esclarecer || !draft.descricao ? "product" : "size", draft);
+    if (intent.esclarecer && draft.mode === "produto")
       announce(
         "O pedido precisa de esclarecimento. Vamos pesquisar um produto por vez. Qual produto?",
         true,
@@ -350,10 +364,11 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}) {
       return;
     }
     if (command === "restart") {
-      invalidate();
-      advance("product", newDraft());
+      setMode(current.current.draft.mode);
       return;
     }
+    if (/^(buscar |pesquisar )?combust[ií]veis$/i.test(value)) { setMode("combustivel"); return; }
+    if (/^(buscar |pesquisar )?produtos$/i.test(value)) { setMode("produto"); return; }
     const edits = {
       editProduct: "product",
       editSize: "size",
@@ -363,8 +378,9 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}) {
       editDays: "days",
     } as const;
     if (command && command in edits) {
+      if (current.current.draft.mode === "combustivel" && (command === "editSize" || command === "editVariant")) { announce("Combustíveis são escolhidos pelo tipo. Use corrigir combustível."); return; }
       invalidate();
-      advance(edits[command as keyof typeof edits]);
+      advance(command === "editProduct" && current.current.draft.mode === "combustivel" ? "fuel" : edits[command as keyof typeof edits]);
       return;
     }
     if (current.current.busy) {
@@ -399,7 +415,14 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}) {
     }
     const { draft, stage } = current.current;
     const normalized = normalize(value).replace(/[.!?]+$/, "");
-    if (stage === "product") {
+    if (stage === "product" || stage === "fuel") {
+      const fuel = normalized === "manter" && draft.mode === "combustivel" ? {tipo: draft.tipoCombustivel, municipio: draft.municipio || null} : parseFuelRequest(value);
+      if (fuel || stage === "fuel") {
+        invalidate();
+        const next: Draft = {...draft, mode:"combustivel", tipoCombustivel:fuel?.tipo ?? null, descricao:"", embalagem:"", variante:"", municipio:fuel?.municipio ?? draft.municipio, coords: fuel?.municipio ? null : draft.coords};
+        advance(!next.tipoCombustivel ? "fuel" : next.municipio || next.coords ? "confirm" : "place", next);
+        return;
+      }
       const product = parseProduct(value);
       const error = validateDescricao(product.descricao);
       if (error) {
@@ -455,7 +478,7 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}) {
     }
   }
   answerRef.current = answer;
-  const results = state.confirmed ? rankVoiceRecords(state.items, state.confirmed.intent) : [];
+  const results = state.confirmed ? rankDraft(state.items, state.confirmed.intent) : [];
   return {
     state,
     results,
@@ -463,6 +486,7 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}) {
     answer,
     interpret,
     requestLocation,
+    setMode,
     stop,
     listen() {
       if (!current.current.busy) speech.current?.listen();

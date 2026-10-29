@@ -1,16 +1,20 @@
-import { LIMITS, municipioNome } from "@/lib/economiza/constants";
-import type { ProductQuery } from "@/lib/economiza/validation";
+import { LIMITS, municipioNome, fuelName } from "@/lib/economiza/constants";
+import type { ProductQuery, FuelQuery } from "@/lib/economiza/validation";
 import { resolveMunicipio, type ProductIntent } from "./intent";
 
 export type Stage =
-  "product" | "size" | "variant" | "place" | "radius" | "days" | "confirm" | "results";
+  "fuel" | "product" | "size" | "variant" | "place" | "radius" | "days" | "confirm" | "results";
+export type SearchMode = "produto" | "combustivel";
 export type Draft = ProductIntent & {
+  mode: SearchMode;
+  tipoCombustivel: number | null;
   municipio: string;
   coords: { lat: number; lng: number } | null;
   raio: number;
   dias: number;
 };
-export const newDraft = (): Draft => ({
+export const newDraft = (mode: SearchMode = "produto"): Draft => ({
+  mode, tipoCombustivel: null,
   descricao: "",
   embalagem: "",
   variante: "",
@@ -23,10 +27,12 @@ export function draftSummary(draft: Draft) {
   const place = draft.coords
     ? `sua localização atual, raio de ${draft.raio} quilômetros`
     : draft.municipio || "município ainda não escolhido";
+  if (draft.mode === "combustivel") return `${draft.tipoCombustivel ? fuelName(draft.tipoCombustivel) : "Combustível ainda não escolhido"}; preço por ${draft.tipoCombustivel === 6 ? "metro cúbico" : "litro"}; em ${place}; últimos ${draft.dias} dias.`;
   return `${draft.descricao || "Produto ainda não escolhido"}; ${draft.embalagem || "qualquer embalagem (tamanhos podem variar)"}; ${draft.variante || "qualquer variante"}; em ${place}; últimos ${draft.dias} dias.`;
 }
 export function promptFor(stage: Stage, draft: Draft): string {
   switch (stage) {
+    case "fuel": return `Qual combustível? Escolha gasolina comum, gasolina aditivada, etanol, diesel comum, diesel aditivado (S10) ou GNV.${draft.tipoCombustivel ? ` Identifiquei ${fuelName(draft.tipoCombustivel)}. Diga manter para confirmar o tipo.` : ""}`;
     case "product":
       return "Qual produto você quer pesquisar? Diga, por exemplo, buscar arroz.";
     case "size":
@@ -45,11 +51,11 @@ export function promptFor(stage: Stage, draft: Draft): string {
       return "Você pode ouvir resultados, pedir próximo resultado, carregar mais resultados ou fazer nova busca.";
   }
 }
-export function queryFor(draft: Draft, pagina = 1): ProductQuery | null {
+export function queryFor(draft: Draft, pagina = 1): ProductQuery | FuelQuery | null {
   const codigoIBGE = resolveMunicipio(draft.municipio);
   if (!draft.coords && codigoIBGE === null) return null;
   return {
-    descricao: draft.descricao.trim(),
+    ...(draft.mode === "combustivel" ? {tipoCombustivel: draft.tipoCombustivel ?? 0} : {descricao: draft.descricao.trim()}),
     place: draft.coords
       ? {
           tipo: "geolocalizacao",

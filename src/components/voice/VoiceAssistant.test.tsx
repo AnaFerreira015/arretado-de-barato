@@ -3,8 +3,8 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { VoiceAssistant } from "./VoiceAssistant";
 import { sale } from "@/lib/voice/test-fixtures";
 
-const { search, interpret } = vi.hoisted(() => ({ search: vi.fn(), interpret: vi.fn() }));
-vi.mock("@/lib/economiza/api.functions", () => ({ searchProducts: search }));
+const { search, interpret, fuel } = vi.hoisted(() => ({ search: vi.fn(), interpret: vi.fn(), fuel: vi.fn() }));
+vi.mock("@/lib/economiza/api.functions", () => ({ searchProducts: search, searchFuel: fuel }));
 vi.mock("@/lib/voice/ai.functions", () => ({ interpretVoice: interpret }));
 afterEach(() => {
   cleanup();
