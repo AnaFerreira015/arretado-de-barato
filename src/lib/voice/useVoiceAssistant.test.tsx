@@ -269,7 +269,7 @@ it("gasolina ambígua exige tipo e troca de modo descarta resposta tardia", asyn
   expect(h.result.current.results).toEqual([]);
   expect(h.result.current.state.stage).toBe("product");
 });
-it("IA identifica combustível e exige confirmação do tipo e local", async () => {
+it("IA identifica combustível e apresenta confirmação sem perguntar tipo novamente", async () => {
   const interpret = vi.fn().mockResolvedValue({
     ok: true,
     intent: {
@@ -289,7 +289,7 @@ it("IA identifica combustível e exige confirmação do tipo e local", async () 
   await act(async () => {
     await h.result.current.interpret("GNV em Maceió");
   });
-  expect(h.result.current.state.stage).toBe("fuel");
+  expect(h.result.current.state.stage).toBe("confirm");
   expect(h.result.current.state.draft.tipoCombustivel).toBe(6);
   expect(searchFuel).not.toHaveBeenCalled();
   await act(async () => {
@@ -339,4 +339,155 @@ it("esclarecimento da IA exige nova escolha de um combustível", async () => {
   });
   expect(searchFuel).not.toHaveBeenCalled();
   expect(h.result.current.state.stage).toBe("fuel");
+});
+
+it("preenche pedido natural completo e confirma com resposta curta", async () => {
+  const h = setup();
+  await h.answer("eu queria uma Coca zero de dois litros em Maceió, por favor");
+  expect(h.result.current.state.stage).toBe("confirm");
+  expect(h.result.current.state.draft).toMatchObject({
+    descricao: "coca",
+    embalagem: "2 l",
+    variante: "zero",
+    municipio: "Maceió",
+  });
+  expect(h.search).not.toHaveBeenCalled();
+  await h.answer("sim");
+  expect(h.search).toHaveBeenCalledTimes(1);
+});
+it("corrige tamanho no resumo sem perder variante e exige nova confirmação", async () => {
+  const h = setup();
+  await h.answer("quero coca zero dois litros em Maceió");
+  await h.answer("na verdade, quero de um litro");
+  expect(h.result.current.state.stage).toBe("confirm");
+  expect(h.result.current.state.draft).toMatchObject({
+    descricao: "coca",
+    embalagem: "1 l",
+    variante: "zero",
+    municipio: "Maceió",
+  });
+  expect(h.search).not.toHaveBeenCalled();
+  await h.answer("não pode pesquisar");
+  expect(h.search).not.toHaveBeenCalled();
+});
+it("encaminha frase livre à IA e não pergunta campos já preenchidos", async () => {
+  const h = setup();
+  h.interpret.mockResolvedValueOnce({
+    ok: true,
+    intent: {
+      descricao: "coca",
+      embalagem: "2 litros",
+      variante: "zero",
+      municipio: "Maceió",
+      raio: null,
+      dias: null,
+      esclarecer: false,
+    },
+  });
+  await h.answer("onde encontro coca zero de dois litros com o melhor preço em Maceió?");
+  expect(h.interpret).toHaveBeenCalledTimes(1);
+  expect(h.result.current.state.stage).toBe("confirm");
+  expect(h.search).not.toHaveBeenCalled();
+});
+it("falha da IA impede executar o pedido anterior e permite retomar manualmente", async () => {
+  const h = setup();
+  await h.prepare();
+  await h.answer("quero algo diferente que combine com meu café");
+  expect(h.interpret).toHaveBeenCalledTimes(1);
+  await h.answer("sim");
+  expect(h.search).not.toHaveBeenCalled();
+  await h.answer("arroz");
+  expect(h.result.current.state.draft.descricao).toBe("arroz");
+});
+it("opção sem IA mantém comandos locais e não envia frases complexas", async () => {
+  const h = setup();
+  act(() => h.result.current.setAutomaticAi(false));
+  await h.answer("onde posso encontrar algo para o café?");
+  expect(h.interpret).not.toHaveBeenCalled();
+  expect(h.result.current.state.message).toMatch(/nome|guiad/);
+});
+it("GPS em frase completa pede permissão e preserva o produto", async () => {
+  const h = setup();
+  h.locate.mockResolvedValueOnce({ lat: -9.6, lng: -35.7 } as never);
+  await h.answer("quero coca de dois litros perto de mim");
+  expect(h.locate).toHaveBeenCalledTimes(1);
+  expect(h.result.current.state.draft).toMatchObject({
+    descricao: "coca",
+    coords: { lat: -9.6, lng: -35.7 },
+  });
+  expect(h.result.current.state.stage).toBe("confirm");
+});
+it("cancelamento descarta interpretação automática tardia", async () => {
+  const h = setup();
+  let resolve!: (v: unknown) => void;
+  h.interpret.mockImplementationOnce(
+    () =>
+      new Promise((r) => {
+        resolve = r;
+      }),
+  );
+  let pending!: Promise<void>;
+  act(() => {
+    pending = h.result.current.answer("onde encontro leite que não tenha lactose?");
+  });
+  await h.answer("pode parar");
+  await act(async () => {
+    resolve({
+      ok: true,
+      intent: {
+        descricao: "leite",
+        embalagem: null,
+        variante: "sem lactose",
+        municipio: "Maceió",
+        raio: null,
+        dias: null,
+        esclarecer: false,
+      },
+    });
+    await pending;
+  });
+  expect(h.result.current.state.draft.descricao).toBe("");
+  expect(h.result.current.state.stage).not.toBe("confirm");
+});
+it("pedido não compreendido sem IA invalida confirmação antiga", async () => {
+  const h = setup();
+  await h.prepare();
+  act(() => h.result.current.setAutomaticAi(false));
+  await h.answer("onde encontro outro produto para meu café?");
+  await h.answer("sim");
+  expect(h.search).not.toHaveBeenCalled();
+  expect(h.result.current.state.stage).not.toBe("confirm");
+});
+it("resposta tanto faz não precisa da IA", async () => {
+  const h = setup();
+  await h.answer("arroz");
+  await h.answer("não tenho preferência");
+  await h.answer("tanto faz");
+  await h.answer("pode ser em Maceió");
+  expect(h.interpret).not.toHaveBeenCalled();
+  expect(h.result.current.state.stage).toBe("confirm");
+});
+it("correção complexa leva contexto atual mas nunca GPS à IA", async () => {
+  const h = setup();
+  h.locate.mockResolvedValueOnce({ lat: -9.6, lng: -35.7 } as never);
+  await h.answer("quero coca zero dois litros perto de mim");
+  h.interpret.mockResolvedValueOnce({
+    ok: true,
+    intent: {
+      descricao: "coca",
+      embalagem: "2 litros",
+      variante: "sem açúcar",
+      municipio: null,
+      raio: 5,
+      dias: 7,
+      esclarecer: false,
+    },
+  });
+  await h.answer("na verdade prefiro aquela sem açúcar");
+  const sent = h.interpret.mock.calls[0]?.[0];
+  expect(sent.data.context).toMatchObject({ descricao: "coca", variante: "zero" });
+  expect(JSON.stringify(sent)).not.toMatch(/coords|latitude|longitude|-9.6|-35.7/);
+  expect(h.result.current.state.draft.coords).toEqual({ lat: -9.6, lng: -35.7 });
+  expect(h.result.current.state.stage).toBe("confirm");
+  expect(h.search).not.toHaveBeenCalled();
 });

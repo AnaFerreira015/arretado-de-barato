@@ -64,6 +64,21 @@ export function VoiceAssistant({ initialMode = "produto" }: { initialMode?: Sear
           Se você usa leitor de tela, pode deixar as respostas faladas desligadas para evitar duas
           vozes ao mesmo tempo.
         </p>
+        <label className="flex min-h-11 items-center gap-3 font-semibold">
+          <input
+            type="checkbox"
+            className="size-5 accent-primary"
+            checked={state.automaticAi}
+            onChange={(e) => assistant.setAutomaticAi(e.target.checked)}
+            aria-describedby={`${id}-ai-help`}
+          />
+          Usar IA para entender frases complexas
+        </label>
+        <p id={`${id}-ai-help`} className="text-sm text-muted-foreground">
+          Fale do seu jeito. Quando necessário, o texto e os campos atuais da busca são enviados à
+          IA da Cloudflare. Não enviamos coordenadas, áudio nem resultados à IA. Se ela estiver
+          indisponível ou atingir o limite, você pode continuar pelos controles.
+        </p>
         <p id={`${id}-microphone`} className="text-sm text-muted-foreground">
           Ao clicar em Falar, o navegador pode enviar seu áudio ao serviço de reconhecimento de voz
           dele. O microfone não fica sempre ligado. Não guardamos gravações nem transcrições.

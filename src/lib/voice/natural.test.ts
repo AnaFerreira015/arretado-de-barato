@@ -54,3 +54,29 @@ it.each([
 ])("não adivinha %s", (text) => {
   expect(naturalRequest(text, draft, "confirm")).toBeNull();
 });
+it("correção do mesmo produto preserva variante não alterada", () => {
+  expect(
+    naturalRequest("na verdade quero coca de um litro", draft, "confirm")?.draft,
+  ).toMatchObject({ descricao: "coca", embalagem: "1 l", variante: "zero" });
+});
+it.each(["quero um litro de leite em Maceió", "quero 1 litro de leite em Maceió"])(
+  "reconhece quantidade antes do produto: %s",
+  (text) => {
+    expect(naturalRequest(text, newDraft(), "product")?.draft).toMatchObject({
+      descricao: "leite",
+      embalagem: "1 l",
+      municipio: "Maceió",
+    });
+  },
+);
+it.each(["quero coca sem zero em Maceió", "quero leite sem integral em Maceió"])(
+  "não converte exclusão em inclusão: %s",
+  (text) => {
+    expect(naturalRequest(text, newDraft(), "product")).toBeNull();
+  },
+);
+it("aceita produto e município sem verbo obrigatório", () => {
+  expect(
+    naturalRequest("coca zero de dois litros em Maceió", newDraft(), "product")?.draft,
+  ).toMatchObject({ descricao: "coca", embalagem: "2 l", variante: "zero", municipio: "Maceió" });
+});

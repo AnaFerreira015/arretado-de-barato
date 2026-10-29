@@ -37,7 +37,7 @@ export function promptFor(stage: Stage, draft: Draft): string {
     case "fuel":
       return `Qual combustível? Escolha gasolina comum, gasolina aditivada, etanol, diesel comum, diesel aditivado (S10) ou GNV.${draft.tipoCombustivel ? ` Identifiquei ${fuelName(draft.tipoCombustivel)}. Diga manter para confirmar o tipo.` : ""}`;
     case "product":
-      return "Qual produto você quer pesquisar? Diga, por exemplo, buscar arroz.";
+      return "Qual produto você quer pesquisar? Você pode dizer uma frase completa, como: quero arroz em Maceió.";
     case "size":
       return `Qual embalagem? ${draft.embalagem ? `Identifiquei ${draft.embalagem}. Diga manter, outro tamanho` : "Diga um tamanho, como 2 litros,"} ou qualquer embalagem.`;
     case "variant":
@@ -49,7 +49,7 @@ export function promptFor(stage: Stage, draft: Draft): string {
     case "days":
       return "Quantos dias pesquisar? Diga um número de 1 a 10 dias.";
     case "confirm":
-      return `Confira: ${draftSummary(draft)} Diga confirmar busca ou corrija um campo.`;
+      return `Confira: ${draftSummary(draft)} Posso pesquisar? Diga sim, pode buscar, ou me conte o que deseja mudar.`;
     case "results":
       return "Você pode ouvir resultados, pedir próximo resultado, carregar mais resultados ou fazer nova busca.";
   }

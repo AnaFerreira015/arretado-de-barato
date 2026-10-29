@@ -10,7 +10,7 @@ import {
 } from "@/lib/economiza/validation";
 import { prefsStore } from "@/lib/store";
 import { interpretVoice } from "./ai.functions";
-import { aiIntentSchema, type InterpretResponse } from "./ai.schema";
+import { aiIntentSchema, type InterpretResponse, type VoiceContext } from "./ai.schema";
 import { parseCommand, parseProduct, parseSize, normalize, type ProductIntent } from "./intent";
 import { describeRecord, rankVoiceRecords } from "./results";
 import { createSpeechController, type AudioState, type SpeechController } from "./speech";
@@ -25,6 +25,14 @@ import {
   type Stage,
 } from "./flow";
 
+import {
+  naturalRequest,
+  cleanSpeech,
+  anyChoice,
+  keepChoice,
+  affirmative,
+  negative,
+} from "./natural";
 import { parseFuelRequest, rankFuelRecords } from "./fuel";
 
 function rankDraft(records: SaleRecord[], draft: Draft) {
@@ -36,7 +44,7 @@ function rankDraft(records: SaleRecord[], draft: Draft) {
 type Services = {
   searchFuel(args: { data: { query: FuelQuery; demo: boolean } }): Promise<SearchResponse>;
   search(args: { data: { query: ProductQuery; demo: boolean } }): Promise<SearchResponse>;
-  interpret(args: { data: { text: string } }): Promise<InterpretResponse>;
+  interpret(args: { data: { text: string; context?: VoiceContext } }): Promise<InterpretResponse>;
   locate(): Promise<{ lat: number; lng: number }>;
 };
 function locate(): ReturnType<Services["locate"]> {
@@ -67,6 +75,7 @@ type State = {
   error: string | null;
   transcript: string;
   aiAttempts: number;
+  automaticAi: boolean;
   audio: AudioState;
   spoken: boolean;
   canListen: boolean;
@@ -86,6 +95,7 @@ const initial = (mode: SearchMode): State => ({
   error: null,
   transcript: "",
   aiAttempts: 0,
+  automaticAi: true,
   audio: "idle",
   spoken: false,
   canListen: false,
@@ -280,7 +290,7 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
     const summary = `${result.demo ? "Dados demonstrativos. " : ""}${matches.length} correspondências entre ${examined} registros consultados. ${matches.length ? "Mostrando até três menores preços entre os registros carregados." : "Nenhuma correspondência nas páginas carregadas."} ${confirmed.intent.mode === "combustivel" || confirmed.intent.embalagem ? "" : "Os tamanhos podem variar. "}${!result.page.ultimaPagina ? "Você pode carregar mais resultados." : "Última página."}`;
     announce(summary);
   }
-  async function requestLocation() {
+  async function requestLocation(finish = false) {
     invalidate();
     const id = ++request.current;
     update({ busy: "location" });
@@ -296,11 +306,18 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
       )
         throw new Error("invalid coordinates");
       update({ busy: null });
-      advance(current.current.stage === "place" ? "radius" : current.current.stage, {
-        ...current.current.draft,
-        coords,
-        municipio: "",
-      });
+      advance(
+        finish
+          ? nextRequired({ ...current.current.draft, coords })
+          : current.current.stage === "place"
+            ? "radius"
+            : current.current.stage,
+        {
+          ...current.current.draft,
+          coords,
+          municipio: "",
+        },
+      );
     } catch {
       if (id !== request.current) return;
       update({ busy: null, draft: { ...current.current.draft, coords: null } });
@@ -308,16 +325,40 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
       announce("Não foi possível obter a localização. Escolha um município de Alagoas.", true);
     }
   }
-  async function interpret(text: string) {
+  function nextRequired(draft: Draft): Stage {
+    if (draft.mode === "combustivel" && !draft.tipoCombustivel) return "fuel";
+    if (draft.mode === "produto" && !draft.descricao) return "product";
+    return draft.municipio || draft.coords ? "confirm" : "place";
+  }
+  async function interpret(text: string, contextual = false) {
     if (current.current.busy) return;
     if (!text.trim() || text.trim().length > 500) {
       announce("Escreva um pedido de até 500 caracteres.", true);
       return;
     }
     if (current.current.aiAttempts >= 5) {
+      invalidate();
+      advance(
+        current.current.draft.mode === "combustivel" ? "fuel" : "product",
+        newDraft(current.current.draft.mode),
+      );
       announce("Limite de interpretações desta visita atingido. Continue pelo modo guiado.", true);
       return;
     }
+    const previous = current.current;
+    const context: VoiceContext | undefined = contextual
+      ? {
+          tipoBusca: previous.draft.mode,
+          tipoCombustivel: previous.draft.tipoCombustivel,
+          descricao: previous.draft.descricao,
+          embalagem: previous.draft.embalagem,
+          variante: previous.draft.variante,
+          municipio: previous.draft.municipio,
+          raio: previous.draft.raio,
+          dias: previous.draft.dias,
+          etapa: previous.stage,
+        }
+      : undefined;
     invalidate();
     const id = ++request.current;
     update({
@@ -330,7 +371,9 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
     announce("Interpretando pedido com IA. Você ainda vai conferir antes de pesquisar.");
     let result: InterpretResponse;
     try {
-      result = await services.current.interpret({ data: { text } });
+      result = await services.current.interpret({
+        data: { text, ...(context ? { context } : {}) },
+      });
     } catch {
       result = {
         ok: false,
@@ -360,15 +403,11 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
       raio: intent.raio ?? 5,
       dias: intent.dias ?? 7,
     };
-    // Always walk through the fields again: partial interpretations must not silently drop restrictions.
-    advance(
-      draft.mode === "combustivel"
-        ? "fuel"
-        : intent.esclarecer || !draft.descricao
-          ? "product"
-          : "size",
-      draft,
-    );
+    if (contextual && !intent.municipio && !intent.usarLocalizacao && !intent.esclarecer)
+      draft.coords = previous.draft.coords;
+    if (intent.esclarecer && draft.mode === "produto") draft.descricao = "";
+    advance(nextRequired(draft), draft);
+    if (intent.usarLocalizacao && !intent.esclarecer) await requestLocation(true);
     if (intent.esclarecer && draft.mode === "combustivel")
       announce(
         `O pedido precisa de esclarecimento. Vamos pesquisar um combustível por vez. ${promptFor("fuel", draft)}`,
@@ -380,11 +419,30 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
         true,
       );
   }
+  async function interpretNatural(text: string) {
+    if (!current.current.automaticAi) {
+      invalidate();
+      advance(
+        current.current.draft.mode === "combustivel" ? "fuel" : "product",
+        newDraft(current.current.draft.mode),
+      );
+      announce(
+        "Não entendi todos os detalhes. Continue pelo modo guiado: informe o nome do produto ou use os controles para corrigir a busca.",
+        true,
+      );
+      return;
+    }
+    await interpret(text, true);
+  }
   async function answer(text: string) {
     const value = text.trim();
     if (!value) return;
     update({ transcript: value });
     const command = parseCommand(value);
+    if (value.length > 500) {
+      announce("Use até 500 caracteres por pedido.", true);
+      return;
+    }
     if (command === "stop") {
       stop();
       return;
@@ -451,15 +509,50 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
     }
     if (command === "help") {
       announce(
-        "Use Falar ou digite sua resposta e pressione Enviar. Comandos: confirmar busca, buscar produtos, buscar combustíveis, corrigir combustível, corrigir produto, corrigir embalagem, corrigir variante, corrigir município, corrigir raio, corrigir período, ouvir resultados, próximo, carregar mais, repetir, parar e nova busca.",
+        "Fale naturalmente, por exemplo: quero coca zero de dois litros em Maceió. Para mudar, diga: na verdade, quero de um litro. Você também pode usar os controles. Comandos: confirmar busca, buscar produtos, buscar combustíveis, corrigir combustível, corrigir produto, corrigir embalagem, corrigir variante, corrigir município, corrigir raio, corrigir período, ouvir resultados, próximo, carregar mais, repetir, parar e nova busca.",
       );
       return;
     }
     const { draft, stage } = current.current;
-    const normalized = normalize(value).replace(/[.!?]+$/, "");
+    const normalized = cleanSpeech(value);
+    if (negative(value)) {
+      announce(
+        "Não vou pesquisar. Diga o que deseja mudar, por exemplo: na verdade, quero de um litro.",
+      );
+      return;
+    }
+    if (affirmative(value) && stage === "confirm") {
+      await run();
+      return;
+    }
+    if (keepChoice(value) && (stage === "place" || stage === "product")) {
+      announce(promptFor(stage, draft));
+      return;
+    }
+    const natural = naturalRequest(value, draft, stage);
+    if (natural) {
+      invalidate();
+      advance(nextRequired(natural.draft), natural.draft);
+      if (natural.location) await requestLocation(true);
+      return;
+    }
+    const freeRequest =
+      /^(?:eu |agora |na verdade|quero|queria|gostaria|preciso|onde|me |voce |pode |tem |estou |encontr|mostr|acha|troqu|mud|procure|busque)/.test(
+        normalized,
+      ) ||
+      /\b(?:nao|ou|exceto)\b|\be\b/.test(normalized) ||
+      normalized.split(" ").length > 7 ||
+      value.includes("?");
+    if (
+      (freeRequest && !((stage === "size" || stage === "variant") && anyChoice(value))) ||
+      ((stage === "confirm" || stage === "results") && !keepChoice(value))
+    ) {
+      await interpretNatural(value);
+      return;
+    }
     if (stage === "product" || stage === "fuel") {
       const fuel =
-        normalized === "manter" && draft.mode === "combustivel"
+        keepChoice(value) && draft.mode === "combustivel"
           ? { tipo: draft.tipoCombustivel, municipio: draft.municipio || null }
           : parseFuelRequest(value, draft.mode === "combustivel");
       if (fuel || stage === "fuel") {
@@ -487,14 +580,13 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
         return;
       }
       invalidate();
-      advance("size", { ...draft, ...product });
+      const next = { ...draft, ...product };
+      advance(
+        product.embalagem ? (product.variante ? nextRequired(next) : "variant") : "size",
+        next,
+      );
     } else if (stage === "size") {
-      const embalagem =
-        normalized === "manter"
-          ? draft.embalagem
-          : /^(qualquer|qualquer embalagem)$/.test(normalized)
-            ? ""
-            : value;
+      const embalagem = keepChoice(value) ? draft.embalagem : anyChoice(value) ? "" : value;
       if (embalagem && !parseSize(embalagem)) {
         announce(
           "Informe um tamanho simples, como 2 litros ou 500 gramas, ou diga qualquer embalagem.",
@@ -502,23 +594,18 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
         );
         return;
       }
-      advance("variant", { ...draft, embalagem });
+      advance(draft.variante ? nextRequired(draft) : "variant", { ...draft, embalagem });
     } else if (stage === "variant") {
-      const variante =
-        normalized === "manter"
-          ? draft.variante
-          : /^(qualquer|qualquer variante)$/.test(normalized)
-            ? ""
-            : value;
+      const variante = keepChoice(value) ? draft.variante : anyChoice(value) ? "" : value;
       if (variante.length > 50) {
         announce("Use até 50 caracteres para a variante.", true);
         return;
       }
-      advance("place", { ...draft, variante });
+      advance(nextRequired(draft), { ...draft, variante });
     } else if (stage === "place") {
       const municipio = canonicalMunicipio(value);
       if (!municipio) {
-        announce("Não identifiquei esse município. Escolha um nome da lista de Alagoas.", true);
+        await interpretNatural(value);
         return;
       }
       advance("confirm", { ...draft, municipio, coords: null });
@@ -547,6 +634,10 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
     stop,
     listen() {
       if (!current.current.busy) speech.current?.listen();
+    },
+    setAutomaticAi(enabled: boolean) {
+      if (current.current.busy === "ai") stop();
+      update({ automaticAi: enabled });
     },
     setSpoken(enabled: boolean) {
       update({ spoken: enabled });

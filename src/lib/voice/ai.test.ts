@@ -100,3 +100,29 @@ describe("interpretação opcional", () => {
     expect(await result).toMatchObject({ ok: false, code: "unavailable" });
   });
 });
+
+it("envia contexto validado sem coordenadas para interpretar correções", async () => {
+  const fetch = vi.fn().mockResolvedValue(response({ ...proposal, embalagem: "1 litro" }));
+  vi.stubGlobal("fetch", fetch);
+  const context = {
+    tipoBusca: "produto",
+    descricao: "coca",
+    embalagem: "2 litros",
+    variante: "zero",
+    municipio: "Maceió",
+    tipoCombustivel: null,
+    raio: 5,
+    dias: 7,
+    etapa: "confirm",
+  };
+  expect(await interpretVoiceText("na verdade de um litro", context)).toMatchObject({ ok: true });
+  const payload = JSON.parse(fetch.mock.calls[0]![1].body);
+  expect(payload.messages[1].content).toContain("2 litros");
+  expect(payload.messages[1].content).toContain("na verdade de um litro");
+  fetch.mockClear();
+  expect(await interpretVoiceText("arroz", { ...context, latitude: -9 })).toMatchObject({
+    ok: false,
+    code: "invalid",
+  });
+  expect(fetch).not.toHaveBeenCalled();
+});

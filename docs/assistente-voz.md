@@ -38,7 +38,7 @@ O plano gratuito tem cota compartilhada pela conta. A aplicação não ativa con
 
 ## Dados e privacidade
 
-O botão Falar pode enviar áudio ao serviço de reconhecimento do navegador. Não há escuta automática. A interpretação com IA é uma ação separada: envia somente o texto digitado/transcrito à Cloudflare, sem histórico, GPS, resultados ou favoritos. Não escreva dados pessoais no pedido. Não armazenamos transcrições/gravações. A localização só é solicitada por ação explícita e não é persistida.
+O botão Falar pode enviar áudio ao serviço de reconhecimento do navegador. Não há escuta automática. Com “Usar IA para entender frases complexas” ativado, pedidos não resolvidos localmente enviam o texto digitado/transcrito e os campos atuais da busca à Cloudflare. A opção pode ser desativada; o botão separado de interpretação continua disponível. Não enviamos histórico, coordenadas GPS, resultados ou favoritos à IA. Não escreva dados pessoais no pedido. Não armazenamos transcrições/gravações. A localização só é solicitada por ação explícita e não é persistida.
 
 A IA propõe campos, e você confere antes de pesquisar. Preços vêm da SEFAZ; não da LLM. Ordenação cobre apenas os registros carregados. Embalagens não identificáveis não confirmam filtro de tamanho. O modo demonstrativo é identificado também na leitura. HTTP 500 da SEFAZ continua sendo indisponibilidade da fonte e permite nova tentativa explícita.
 
@@ -74,3 +74,28 @@ A comparação preserva a precisão de até três casas decimais. Líquidos são
 Inclua na verificação manual: trocar de modo com consulta pendente, negar GPS, corrigir tipo, consultar GNV e conferir a unidade falada, carregar mais/repetir uma página que falhou. Testes automatizados não substituem a validação com microfone e leitor de tela reais.
 
 Validação desta extensão (29/10/2026): 102 testes passaram, TypeScript e build aprovados, lint dos módulos do assistente sem erros. A revisão independente identificou e os testes de regressão cobriram a preservação de “álcool” no modo produtos e o esclarecimento obrigatório de pedidos ambíguos da IA. Permanecem as limitações de validação real de voz, leitores de tela e APIs externas descritas acima.
+
+
+## Conversa natural (modo híbrido)
+
+Após os patches de voz, combustíveis e estilo, aplique:
+
+```bash
+git am --3way /caminho/voz-natural.patch
+```
+
+A opção **Usar IA para entender frases complexas** vem ativada nesta função. Pedidos simples e comandos são resolvidos localmente; frases mais complexas usam a integração Workers AI existente. Não há novas credenciais. As cinco tentativas por visita e a cota do provedor continuam valendo; o modo guiado não consome tokens. Sem IA configurada, os pedidos locais e os controles continuam funcionando.
+
+Exemplos:
+- “Eu queria uma Coca zero de dois litros mais barata em Maceió, por favor”.
+- “Um litro de leite em Maceió” (também aceita “quero um litro de leite”).
+- “Quero gasolina comum mais barata perto de mim” (o navegador pede permissão de localização).
+- “Na verdade, quero de um litro” preserva o produto e a variante.
+- “Pode buscar”, “sim”, “mostra outro”, “pode repetir” e “pode parar”.
+- “Tanto faz” ou “não tenho preferência” respondem às perguntas de embalagem e variante.
+
+Informações fornecidas não são perguntadas novamente; pedidos completos vão ao resumo para confirmação. O resumo informa também os padrões de período, raio e eventuais tamanhos/variantes livres. Gasolina/diesel sem tipo exigem esclarecimento. Restrições que a consulta não representa, como exclusão de variante ou teto de preço, devem ser esclarecidas pela IA; não há garantia de compreensão de qualquer frase. Revise sempre o resumo antes de confirmar.
+
+Correções complexas enviam os campos atuais validados ao modelo. Mudança de produto limpa tamanho e variante; correção do mesmo produto preserva campos não alterados. Cancelamento ignora respostas pendentes. Quando uma interpretação falha ou está desativada e o pedido não é compreendido, a confirmação anterior é invalidada e o usuário pode retomar pelo modo guiado.
+
+Validação automatizada: 135 testes, incluindo pedidos completos, correções, contexto sem GPS, quantidade antes do produto, exclusões, fallback, cancelamento e confirmação. TypeScript, lint do assistente e build verificados. A revisão independente encontrou três casos de interpretação local, corrigidos com regressões RED→GREEN. Não houve validação de microfone real, leitores de tela, modelo remoto nem deploy Cloudflare nesta alteração.

@@ -32,6 +32,7 @@ export function naturalRequest(
 ): { draft: Draft; location: boolean } | null {
   let value = cleanSpeech(text);
   if (/\b(?:nao|nem|ou|exceto|menos|ate|abaixo|acima)\b|\be\b/.test(value)) return null;
+  if (/\bsem\b/.test(value.replace(/\bsem (?:lactose|acucar)\b/g, ""))) return null;
   const correction = /^(?:na verdade|melhor|troque|troca|mude|muda|corrigir)\b/.test(value);
   const request =
     /^(?:(?:eu |agora )?(?:quero|queria|gostaria de|preciso de)|(?:buscar|busque|pesquisar|pesquise|procurar|procure))\s+/.test(
@@ -80,8 +81,14 @@ export function naturalRequest(
     if (base.mode !== "produto") return null;
     return { draft: { ...base, embalagem: size.embalagem }, location };
   }
-  if (!request && !correction) return null;
-  value = value.replace(/^(?:uma?|o|a)\s+/, "").trim();
+  if (
+    !request &&
+    !correction &&
+    !((stage === "product" || stage === "fuel") && (municipio || location))
+  )
+    return null;
+  if (!/^(?:um|uma)\s+(?:litro|quilo|quilograma|grama|mililitro)/.test(value))
+    value = value.replace(/^(?:uma?|o|a)\s+/, "").trim();
   if (!value || /\b(?:em|perto|onde|encontro|que|aquele|aquela|ser|com|por)\b/.test(value))
     return null;
   const fuel = parseFuelRequest(value, current.mode === "combustivel");
@@ -98,13 +105,16 @@ export function naturalRequest(
       location,
     };
   const product = parseProduct(value);
+  if (product.embalagem) product.descricao = product.descricao.replace(/^de\s+/, "");
   if (
-    !product.descricao ||
+    product.descricao.length < 3 ||
     product.descricao.length > 50 ||
     /\b(?:de|do|da)\s*$/.test(product.descricao)
   )
     return null;
-  if (correction && current.descricao && !product.embalagem && !product.descricao.trim())
-    return null;
+  if (correction && normalize(product.descricao) === normalize(current.descricao)) {
+    product.embalagem ||= current.embalagem;
+    product.variante ||= current.variante;
+  }
   return { draft: { ...base, mode: "produto", tipoCombustivel: null, ...product }, location };
 }

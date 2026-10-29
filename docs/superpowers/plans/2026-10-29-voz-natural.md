@@ -22,13 +22,19 @@
 
 ### Task 1: Interpretação local
 Files: natural.ts/test.ts, intent.ts/test.ts.
-- [ ] Testar frases completas, correções, negativas e aliases antes de implementar.
-- [ ] Implementar análise conservadora com resultado tipado e fallback para IA.
-- [ ] Executar testes e registrar commit.
+- [x] Testar frases completas, correções, negativas e aliases antes de implementar.
+- [x] Implementar análise conservadora com resultado tipado e fallback para IA.
+- [x] Executar testes e registrar commit.
 
 ### Task 2: Fluxo híbrido e IA contextual
 Files: useVoiceAssistant.ts/test.tsx, ai.schema.ts, ai.functions.ts, ai.server.ts, ai.test.ts, VoiceAssistant.tsx/test.tsx, flow.ts.
-- [ ] Testar pedidos naturais, confirmação, correção, falha/cancelamento e opção sem IA.
-- [ ] Integrar contexto validado, avanço sem perguntas redundantes, fallback e aviso na interface.
-- [ ] Executar suite completa, typecheck, lint e build. Revisão independente ao final.
-- [ ] Documentar, commitar e entregar patch incremental.
+- [x] Testar pedidos naturais, confirmação, correção, falha/cancelamento e opção sem IA.
+- [x] Integrar contexto validado, avanço sem perguntas redundantes, fallback e aviso na interface.
+- [x] Executar suite completa, typecheck, lint e build. Revisão independente ao final.
+- [x] Documentar, commitar e entregar patch incremental.
+
+## Registro de execução
+
+Execução local na branch isolada existente feat/assistente-voz. Task 1: 902e718; análise local e aliases validados após RED→GREEN. Task 2: integração contextual, opção visível de IA e fluxo com confirmação; testes de regressão antes de cada correção.
+
+Revisão independente: preservar variante na correção do mesmo produto, interpretar quantidade antes do nome e encaminhar exclusões com “sem” para esclarecimento. Todos corrigidos e cobertos por testes que falharam antes. Decisão de implementação: manter cinco tentativas de IA por visita e fallback guiado, sem alterar cota ou provedor. Sem push/deploy; entrega incremental desde 5c29e07.

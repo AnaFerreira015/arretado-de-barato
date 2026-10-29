@@ -19,6 +19,7 @@ export const aiIntentSchema = z
     raio: z.number().int().min(LIMITS.raioMin).max(LIMITS.raioMax).nullable(),
     dias: z.number().int().min(LIMITS.diasMin).max(LIMITS.diasMax).nullable(),
     esclarecer: z.boolean(),
+    usarLocalizacao: z.boolean().default(false),
   })
   .strict()
   .refine(
@@ -36,3 +37,28 @@ export type InterpretResponse =
       code: "invalid" | "unconfigured" | "unavailable" | "quota" | "invalid-response";
       message: string;
     };
+
+export const voiceContextSchema = z
+  .object({
+    tipoBusca: z.enum(["produto", "combustivel"]),
+    tipoCombustivel: z.number().int().min(1).max(6).nullable(),
+    descricao: z.string().max(50),
+    embalagem: z.string().max(50),
+    variante: z.string().max(50),
+    municipio: z.string().max(80),
+    raio: z.number().int().min(1).max(15),
+    dias: z.number().int().min(1).max(10),
+    etapa: z.enum([
+      "product",
+      "fuel",
+      "size",
+      "variant",
+      "place",
+      "radius",
+      "days",
+      "confirm",
+      "results",
+    ]),
+  })
+  .strict();
+export type VoiceContext = z.infer<typeof voiceContextSchema>;
