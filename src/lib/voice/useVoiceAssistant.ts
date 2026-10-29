@@ -28,7 +28,9 @@ import {
 import { parseFuelRequest, rankFuelRecords } from "./fuel";
 
 function rankDraft(records: SaleRecord[], draft: Draft) {
- return draft.mode === "combustivel" ? rankFuelRecords(records, draft.tipoCombustivel ?? 0) : rankVoiceRecords(records, draft);
+  return draft.mode === "combustivel"
+    ? rankFuelRecords(records, draft.tipoCombustivel ?? 0)
+    : rankVoiceRecords(records, draft);
 }
 
 type Services = {
@@ -50,7 +52,12 @@ function locate(): ReturnType<Services["locate"]> {
     );
   });
 }
-const defaults: Services = { search: searchProducts, searchFuel, interpret: interpretVoice, locate };
+const defaults: Services = {
+  search: searchProducts,
+  searchFuel,
+  interpret: interpretVoice,
+  locate,
+};
 type Confirmed = { query: ProductQuery | FuelQuery; intent: Draft; demo: boolean };
 type State = {
   draft: Draft;
@@ -203,13 +210,17 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
       announce("O modo demonstrativo mudou. Confirme uma nova busca para não misturar os dados.");
       return;
     }
-    if (s.draft.mode === "combustivel" && !s.draft.tipoCombustivel) { advance("fuel"); return; }
+    if (s.draft.mode === "combustivel" && !s.draft.tipoCombustivel) {
+      advance("fuel");
+      return;
+    }
     const query = more ? { ...s.confirmed!.query, pagina: s.meta!.pagina + 1 } : queryFor(s.draft);
     if (!query) {
       advance("place");
       return;
     }
-    const validated = "tipoCombustivel" in query ? validateFuelQuery(query) : validateProductQuery(query);
+    const validated =
+      "tipoCombustivel" in query ? validateFuelQuery(query) : validateProductQuery(query);
     if (!validated.ok) {
       announce(Object.values(validated.errors).join(" "), true);
       return;
@@ -233,12 +244,15 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
       confirmed,
       ...(more ? {} : { items: [], meta: null, examined: 0, selected: 0 }),
     });
-    announce(`Pesquisando ${s.draft.mode === "combustivel" ? "combustíveis" : "produtos"}. Você pode cancelar a consulta.`);
+    announce(
+      `Pesquisando ${s.draft.mode === "combustivel" ? "combustíveis" : "produtos"}. Você pode cancelar a consulta.`,
+    );
     let result: SearchResponse;
     try {
-      result = "tipoCombustivel" in query
-        ? await services.current.searchFuel({ data: { query, demo } })
-        : await services.current.search({ data: { query, demo } });
+      result =
+        "tipoCombustivel" in query
+          ? await services.current.searchFuel({ data: { query, demo } })
+          : await services.current.search({ data: { query, demo } });
     } catch {
       result = {
         ok: false,
@@ -347,7 +361,14 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
       dias: intent.dias ?? 7,
     };
     // Always walk through the fields again: partial interpretations must not silently drop restrictions.
-    advance(draft.mode === "combustivel" ? "fuel" : intent.esclarecer || !draft.descricao ? "product" : "size", draft);
+    advance(
+      draft.mode === "combustivel"
+        ? "fuel"
+        : intent.esclarecer || !draft.descricao
+          ? "product"
+          : "size",
+      draft,
+    );
     if (intent.esclarecer && draft.mode === "produto")
       announce(
         "O pedido precisa de esclarecimento. Vamos pesquisar um produto por vez. Qual produto?",
@@ -367,8 +388,14 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
       setMode(current.current.draft.mode);
       return;
     }
-    if (/^(buscar |pesquisar )?combust[ií]veis$/i.test(value)) { setMode("combustivel"); return; }
-    if (/^(buscar |pesquisar )?produtos$/i.test(value)) { setMode("produto"); return; }
+    if (/^(buscar |pesquisar )?combust[ií]veis$/i.test(value)) {
+      setMode("combustivel");
+      return;
+    }
+    if (/^(buscar |pesquisar )?produtos$/i.test(value)) {
+      setMode("produto");
+      return;
+    }
     const edits = {
       editProduct: "product",
       editSize: "size",
@@ -378,9 +405,19 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
       editDays: "days",
     } as const;
     if (command && command in edits) {
-      if (current.current.draft.mode === "combustivel" && (command === "editSize" || command === "editVariant")) { announce("Combustíveis são escolhidos pelo tipo. Use corrigir combustível."); return; }
+      if (
+        current.current.draft.mode === "combustivel" &&
+        (command === "editSize" || command === "editVariant")
+      ) {
+        announce("Combustíveis são escolhidos pelo tipo. Use corrigir combustível.");
+        return;
+      }
       invalidate();
-      advance(command === "editProduct" && current.current.draft.mode === "combustivel" ? "fuel" : edits[command as keyof typeof edits]);
+      advance(
+        command === "editProduct" && current.current.draft.mode === "combustivel"
+          ? "fuel"
+          : edits[command as keyof typeof edits],
+      );
       return;
     }
     if (current.current.busy) {
@@ -416,11 +453,26 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
     const { draft, stage } = current.current;
     const normalized = normalize(value).replace(/[.!?]+$/, "");
     if (stage === "product" || stage === "fuel") {
-      const fuel = normalized === "manter" && draft.mode === "combustivel" ? {tipo: draft.tipoCombustivel, municipio: draft.municipio || null} : parseFuelRequest(value);
+      const fuel =
+        normalized === "manter" && draft.mode === "combustivel"
+          ? { tipo: draft.tipoCombustivel, municipio: draft.municipio || null }
+          : parseFuelRequest(value);
       if (fuel || stage === "fuel") {
         invalidate();
-        const next: Draft = {...draft, mode:"combustivel", tipoCombustivel:fuel?.tipo ?? null, descricao:"", embalagem:"", variante:"", municipio:fuel?.municipio ?? draft.municipio, coords: fuel?.municipio ? null : draft.coords};
-        advance(!next.tipoCombustivel ? "fuel" : next.municipio || next.coords ? "confirm" : "place", next);
+        const next: Draft = {
+          ...draft,
+          mode: "combustivel",
+          tipoCombustivel: fuel?.tipo ?? null,
+          descricao: "",
+          embalagem: "",
+          variante: "",
+          municipio: fuel?.municipio ?? draft.municipio,
+          coords: fuel?.municipio ? null : draft.coords,
+        };
+        advance(
+          !next.tipoCombustivel ? "fuel" : next.municipio || next.coords ? "confirm" : "place",
+          next,
+        );
         return;
       }
       const product = parseProduct(value);

@@ -20,7 +20,14 @@ export const aiIntentSchema = z
     dias: z.number().int().min(LIMITS.diasMin).max(LIMITS.diasMax).nullable(),
     esclarecer: z.boolean(),
   })
-  .strict().refine(i => i.tipoBusca === "produto" ? i.tipoCombustivel === null : i.embalagem === null && i.variante === null, "Campos incompatíveis com o tipo de busca");
+  .strict()
+  .refine(
+    (i) =>
+      i.tipoBusca === "produto"
+        ? i.tipoCombustivel === null
+        : i.embalagem === null && i.variante === null,
+    "Campos incompatíveis com o tipo de busca",
+  );
 export type AiIntent = z.infer<typeof aiIntentSchema>;
 export type InterpretResponse =
   | { ok: true; intent: AiIntent }

@@ -2,13 +2,15 @@ import { useId, useRef, useState } from "react";
 import { Mic, Search, Square, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { MUNICIPIOS } from "@/lib/economiza/constants";
-import { formatBRL, formatDateTime } from "@/lib/economiza/format";
-import { draftSummary, promptFor } from "@/lib/voice/flow";
+import { MUNICIPIOS, FUEL_TYPES } from "@/lib/economiza/constants";
+import { formatDateTime } from "@/lib/economiza/format";
+import { draftSummary, promptFor, type SearchMode } from "@/lib/voice/flow";
 import { useVoiceAssistant } from "@/lib/voice/useVoiceAssistant";
 
-export function VoiceAssistant() {
-  const assistant = useVoiceAssistant();
+import { voicePrice } from "@/lib/voice/fuel";
+
+export function VoiceAssistant({ initialMode = "produto" }: { initialMode?: SearchMode }) {
+  const assistant = useVoiceAssistant({}, initialMode);
   const { state, results, canLoadMore } = assistant;
   const [text, setText] = useState("");
   const [aiText, setAiText] = useState("");
@@ -23,6 +25,24 @@ export function VoiceAssistant() {
 
   return (
     <div className="space-y-5">
+      <fieldset className="card-surface p-4">
+        <legend className="font-bold">O que pesquisar?</legend>
+        <div className="flex flex-wrap gap-5">
+          {(["produto", "combustivel"] as const).map((mode) => (
+            <label key={mode} className="flex min-h-11 items-center gap-2 font-semibold">
+              <input
+                type="radio"
+                name={`${id}-mode`}
+                value={mode}
+                checked={state.draft.mode === mode}
+                onChange={() => assistant.setMode(mode)}
+                className="size-5 accent-primary"
+              />
+              {mode === "produto" ? "Produtos" : "Combustíveis"}
+            </label>
+          ))}
+        </div>
+      </fieldset>
       <section className="card-surface space-y-4 p-4 md:p-6" aria-labelledby={`${id}-settings`}>
         <h2 id={`${id}-settings`} className="text-lg font-bold">
           Você escolhe como conversar
@@ -142,6 +162,34 @@ export function VoiceAssistant() {
           </p>
         )}
 
+        {state.stage === "fuel" && (
+          <div className="space-y-2">
+            <label htmlFor={`${id}-fuel`} className="block font-semibold">
+              Tipo de combustível
+            </label>
+            <select
+              id={`${id}-fuel`}
+              value=""
+              disabled={busy}
+              className="min-h-12 w-full rounded-lg border-2 border-input bg-card px-3"
+              onChange={(e) => {
+                if (e.target.value) action(e.target.value);
+              }}
+            >
+              <option value="">Escolha o tipo</option>
+              {FUEL_TYPES.map((f) => (
+                <option key={f.codigo} value={f.nome}>
+                  {f.nome}
+                </option>
+              ))}
+            </select>
+            {state.draft.tipoCombustivel && (
+              <Button variant="outline" disabled={busy} onClick={() => action("manter")}>
+                Manter tipo identificado
+              </Button>
+            )}
+          </div>
+        )}
         {state.stage === "size" && (
           <div className="flex flex-wrap gap-2">
             {state.draft.embalagem && (
@@ -210,9 +258,9 @@ export function VoiceAssistant() {
             <p>{draftSummary(state.draft)}</p>
             <div className="flex flex-wrap gap-2">
               {[
-                "produto",
-                "embalagem",
-                "variante",
+                ...(state.draft.mode === "combustivel"
+                  ? ["combustível"]
+                  : ["produto", "embalagem", "variante"]),
                 "município",
                 "período",
                 ...(state.draft.coords ? ["raio"] : []),
@@ -245,12 +293,18 @@ export function VoiceAssistant() {
             {results.length} correspondências entre {state.examined} registros consultados. Até três
             menores preços entre os registros carregados.
           </p>
+          {state.draft.mode === "combustivel" && (
+            <p>
+              Comparação somente entre unidades compatíveis. Registros com unidade não identificada
+              ficam fora da ordenação.
+            </p>
+          )}
           {state.resultDemo && (
             <p className="rounded-lg bg-warning-soft p-3 font-semibold">
               Dados demonstrativos — não são preços reais.
             </p>
           )}
-          {!state.draft.embalagem && (
+          {state.draft.mode === "produto" && !state.draft.embalagem && (
             <p>Os tamanhos podem variar. Confira as embalagens antes de comparar.</p>
           )}
           <p className="text-sm text-muted-foreground">
@@ -271,9 +325,7 @@ export function VoiceAssistant() {
                 {record.descricaoSefaz && record.descricaoSefaz !== record.descricao && (
                   <p>{record.descricaoSefaz}</p>
                 )}
-                <p className="my-2 text-2xl font-extrabold text-primary">
-                  {formatBRL(record.valorVenda)}
-                </p>
+                <p className="my-2 text-2xl font-extrabold text-primary">{voicePrice(record)}</p>
                 <p className="font-semibold">{record.store.nome}</p>
                 <p>
                   {[
@@ -293,8 +345,8 @@ export function VoiceAssistant() {
           </ol>
           {state.selected >= 3 && selected && (
             <p className="rounded-lg border p-3">
-              Resultado {state.selected + 1}: {selected.descricao}. {formatBRL(selected.valorVenda)}
-              . {selected.store.nome}. Venda em {formatDateTime(selected.dataVendaUtc)}.
+              Resultado {state.selected + 1}: {selected.descricao}. {voicePrice(selected)}.{" "}
+              {selected.store.nome}. Venda em {formatDateTime(selected.dataVendaUtc)}.
             </p>
           )}
           <div className="flex flex-wrap gap-2">

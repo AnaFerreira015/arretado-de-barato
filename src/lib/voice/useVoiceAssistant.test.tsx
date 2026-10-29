@@ -205,41 +205,97 @@ it.each(["quota", "invalid"])("IA com %s invalida a confirmação anterior e o G
 });
 
 it("consulta combustíveis sem embalagem e confirma município extraído", async () => {
- const search=vi.fn(); const searchFuel=vi.fn().mockResolvedValue(page(1,[{...sale("GAS COMUM",5.899),kind:"combustivel",unidade:"LT"}]));
- const h=renderHook(()=>useVoiceAssistant({search,searchFuel}));
- await act(async()=>{await h.result.current.answer("buscar gasolina comum mais barata em Maceió");});
- expect(h.result.current.state.stage).toBe("confirm");
- expect(searchFuel).not.toHaveBeenCalled();
- await act(async()=>{await h.result.current.answer("confirmar");});
- expect(search).not.toHaveBeenCalled();
- expect(searchFuel).toHaveBeenCalledWith({data:{query:{tipoCombustivel:1,place:{tipo:"municipio",codigoIBGE:2704302},dias:7,pagina:1,registrosPorPagina:100},demo:false}});
- expect(h.result.current.results).toHaveLength(1);
- expect(h.result.current.state.message).not.toContain("tamanhos");
+  const search = vi.fn();
+  const searchFuel = vi
+    .fn()
+    .mockResolvedValue(
+      page(1, [{ ...sale("GAS COMUM", 5.899), kind: "combustivel", unidade: "LT" }]),
+    );
+  const h = renderHook(() => useVoiceAssistant({ search, searchFuel }));
+  await act(async () => {
+    await h.result.current.answer("buscar gasolina comum mais barata em Maceió");
+  });
+  expect(h.result.current.state.stage).toBe("confirm");
+  expect(searchFuel).not.toHaveBeenCalled();
+  await act(async () => {
+    await h.result.current.answer("confirmar");
+  });
+  expect(search).not.toHaveBeenCalled();
+  expect(searchFuel).toHaveBeenCalledWith({
+    data: {
+      query: {
+        tipoCombustivel: 1,
+        place: { tipo: "municipio", codigoIBGE: 2704302 },
+        dias: 7,
+        pagina: 1,
+        registrosPorPagina: 100,
+      },
+      demo: false,
+    },
+  });
+  expect(h.result.current.results).toHaveLength(1);
+  expect(h.result.current.state.message).not.toContain("tamanhos");
 });
-it("gasolina ambígua exige tipo e troca de modo descarta resposta tardia",async()=>{
- let resolve!:(value:SearchResponse)=>void;
- const searchFuel=vi.fn(()=>new Promise<SearchResponse>(r=>{resolve=r;}));
- const h=renderHook(()=>useVoiceAssistant({searchFuel}));
- await act(async()=>{await h.result.current.answer("gasolina");});
- expect(h.result.current.state.stage).toBe("fuel");
- await act(async()=>{await h.result.current.answer("confirmar");});
- expect(searchFuel).not.toHaveBeenCalled();
- for(const text of ["gasolina aditivada","Maceió"]) await act(async()=>{await h.result.current.answer(text);});
- let pending!:Promise<void>;
- act(()=>{pending=h.result.current.answer("confirmar");});
- act(()=>h.result.current.setMode("produto"));
- await act(async()=>{resolve(page());await pending;});
- expect(h.result.current.results).toEqual([]);
- expect(h.result.current.state.stage).toBe("product");
+it("gasolina ambígua exige tipo e troca de modo descarta resposta tardia", async () => {
+  let resolve!: (value: SearchResponse) => void;
+  const searchFuel = vi.fn(
+    () =>
+      new Promise<SearchResponse>((r) => {
+        resolve = r;
+      }),
+  );
+  const h = renderHook(() => useVoiceAssistant({ searchFuel }));
+  await act(async () => {
+    await h.result.current.answer("gasolina");
+  });
+  expect(h.result.current.state.stage).toBe("fuel");
+  await act(async () => {
+    await h.result.current.answer("confirmar");
+  });
+  expect(searchFuel).not.toHaveBeenCalled();
+  for (const text of ["gasolina aditivada", "Maceió"])
+    await act(async () => {
+      await h.result.current.answer(text);
+    });
+  let pending!: Promise<void>;
+  act(() => {
+    pending = h.result.current.answer("confirmar");
+  });
+  act(() => h.result.current.setMode("produto"));
+  await act(async () => {
+    resolve(page());
+    await pending;
+  });
+  expect(h.result.current.results).toEqual([]);
+  expect(h.result.current.state.stage).toBe("product");
 });
-it("IA identifica combustível e exige confirmação do tipo e local",async()=>{
- const interpret=vi.fn().mockResolvedValue({ok:true,intent:{tipoBusca:"combustivel",tipoCombustivel:6,descricao:null,embalagem:null,variante:null,municipio:"Maceió",raio:null,dias:null,esclarecer:false}});
- const searchFuel=vi.fn();
- const h=renderHook(()=>useVoiceAssistant({interpret,searchFuel}));
- await act(async()=>{await h.result.current.interpret("GNV em Maceió");});
- expect(h.result.current.state.stage).toBe("fuel");
- expect(h.result.current.state.draft.tipoCombustivel).toBe(6);
- expect(searchFuel).not.toHaveBeenCalled();
- await act(async()=>{await h.result.current.answer("manter");});
- expect(h.result.current.state.stage).toBe("confirm");
+it("IA identifica combustível e exige confirmação do tipo e local", async () => {
+  const interpret = vi
+    .fn()
+    .mockResolvedValue({
+      ok: true,
+      intent: {
+        tipoBusca: "combustivel",
+        tipoCombustivel: 6,
+        descricao: null,
+        embalagem: null,
+        variante: null,
+        municipio: "Maceió",
+        raio: null,
+        dias: null,
+        esclarecer: false,
+      },
+    });
+  const searchFuel = vi.fn();
+  const h = renderHook(() => useVoiceAssistant({ interpret, searchFuel }));
+  await act(async () => {
+    await h.result.current.interpret("GNV em Maceió");
+  });
+  expect(h.result.current.state.stage).toBe("fuel");
+  expect(h.result.current.state.draft.tipoCombustivel).toBe(6);
+  expect(searchFuel).not.toHaveBeenCalled();
+  await act(async () => {
+    await h.result.current.answer("manter");
+  });
+  expect(h.result.current.state.stage).toBe("confirm");
 });

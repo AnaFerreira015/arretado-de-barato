@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useId, useState } from "react";
 import { BookmarkPlus, Calculator, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -110,6 +110,9 @@ function FuelPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-extrabold md:text-3xl">Preços de combustíveis</h1>
+      <Link to="/assistente" search={{modo:"combustivel"}} className="inline-flex min-h-12 items-center rounded-lg border-2 border-primary px-4 font-semibold text-primary hover:bg-primary-soft">
+        Assistente de voz — buscar combustíveis
+      </Link>
       <ModeBanner />
       <form className="card-surface space-y-5 p-4 md:p-6" noValidate aria-label="Pesquisa de combustíveis"
         onSubmit={(e) => { e.preventDefault(); submit(); }}>

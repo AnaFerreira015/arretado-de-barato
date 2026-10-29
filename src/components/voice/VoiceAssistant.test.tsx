@@ -3,7 +3,11 @@ import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/re
 import { VoiceAssistant } from "./VoiceAssistant";
 import { sale } from "@/lib/voice/test-fixtures";
 
-const { search, interpret, fuel } = vi.hoisted(() => ({ search: vi.fn(), interpret: vi.fn(), fuel: vi.fn() }));
+const { search, interpret, fuel } = vi.hoisted(() => ({
+  search: vi.fn(),
+  interpret: vi.fn(),
+  fuel: vi.fn(),
+}));
 vi.mock("@/lib/economiza/api.functions", () => ({ searchProducts: search, searchFuel: fuel }));
 vi.mock("@/lib/voice/ai.functions", () => ({ interpretVoice: interpret }));
 afterEach(() => {
@@ -63,5 +67,38 @@ it("microfone e IA têm avisos e erro não apaga o pedido", async () => {
     expect(screen.getByRole("status")).toHaveTextContent("Continue pelo modo guiado."),
   );
   expect(screen.getByLabelText("Pedido completo para a IA")).toHaveValue("quero arroz em Maceió");
+  expect(search).not.toHaveBeenCalled();
+});
+
+it("abre combustíveis, pula embalagem e apresenta preço por litro", async () => {
+  fuel.mockResolvedValue({
+    ok: true,
+    demo: false,
+    cached: false,
+    fetchedAt: "2026-10-29T12:00:00Z",
+    page: {
+      items: [{ ...sale("GASOLINA COMUM", 5.899), kind: "combustivel", unidade: "LT" }],
+      invalidCount: 0,
+      pagina: 1,
+      totalPaginas: 1,
+      totalRegistros: 1,
+      registrosPagina: 1,
+      registrosPorPagina: 100,
+      primeiraPagina: true,
+      ultimaPagina: true,
+    },
+  });
+  render(<VoiceAssistant initialMode="combustivel" />);
+  expect(screen.getByRole("radio", { name: "Combustíveis" })).toBeChecked();
+  fireEvent.change(screen.getByLabelText("Tipo de combustível"), {
+    target: { value: "Gasolina comum" },
+  });
+  expect(screen.queryByRole("button", { name: "Qualquer embalagem" })).not.toBeInTheDocument();
+  send("Maceió");
+  fireEvent.click(screen.getByRole("button", { name: "Confirmar busca" }));
+  await waitFor(() =>
+    expect(screen.getByTestId("voice-result")).toHaveTextContent("5,899 por litro"),
+  );
+  expect(screen.queryByText(/Os tamanhos podem variar/)).not.toBeInTheDocument();
   expect(search).not.toHaveBeenCalled();
 });
