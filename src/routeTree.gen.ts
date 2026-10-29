@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AssistenteRouteImport } from './routes/assistente'
 import { Route as CombustiveisRouteImport } from './routes/combustiveis'
 import { Route as CompararRouteImport } from './routes/comparar'
 import { Route as FavoritosRouteImport } from './routes/favoritos'
@@ -19,6 +20,11 @@ import { Route as SobreRouteImport } from './routes/sobre'
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AssistenteRoute = AssistenteRouteImport.update({
+  id: '/assistente',
+  path: '/assistente',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CombustiveisRoute = CombustiveisRouteImport.update({
@@ -49,6 +55,7 @@ const SobreRoute = SobreRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/assistente': typeof AssistenteRoute
   '/combustiveis': typeof CombustiveisRoute
   '/comparar': typeof CompararRoute
   '/favoritos': typeof FavoritosRoute
@@ -57,6 +64,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/assistente': typeof AssistenteRoute
   '/combustiveis': typeof CombustiveisRoute
   '/comparar': typeof CompararRoute
   '/favoritos': typeof FavoritosRoute
@@ -66,6 +74,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/assistente': typeof AssistenteRoute
   '/combustiveis': typeof CombustiveisRoute
   '/comparar': typeof CompararRoute
   '/favoritos': typeof FavoritosRoute
@@ -75,12 +84,26 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    '/' | '/combustiveis' | '/comparar' | '/favoritos' | '/lista' | '/sobre'
+    | '/'
+    | '/assistente'
+    | '/combustiveis'
+    | '/comparar'
+    | '/favoritos'
+    | '/lista'
+    | '/sobre'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/combustiveis' | '/comparar' | '/favoritos' | '/lista' | '/sobre'
+  to:
+    | '/'
+    | '/assistente'
+    | '/combustiveis'
+    | '/comparar'
+    | '/favoritos'
+    | '/lista'
+    | '/sobre'
   id:
     | '__root__'
     | '/'
+    | '/assistente'
     | '/combustiveis'
     | '/comparar'
     | '/favoritos'
@@ -90,6 +113,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AssistenteRoute: typeof AssistenteRoute
   CombustiveisRoute: typeof CombustiveisRoute
   CompararRoute: typeof CompararRoute
   FavoritosRoute: typeof FavoritosRoute
@@ -104,6 +128,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/assistente': {
+      id: '/assistente'
+      path: '/assistente'
+      fullPath: '/assistente'
+      preLoaderRoute: typeof AssistenteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/combustiveis': {
@@ -146,6 +177,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AssistenteRoute: AssistenteRoute,
   CombustiveisRoute: CombustiveisRoute,
   CompararRoute: CompararRoute,
   FavoritosRoute: FavoritosRoute,

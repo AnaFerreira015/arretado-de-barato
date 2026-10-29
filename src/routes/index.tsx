@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState } from "react";
 import { BookmarkPlus, ChevronDown, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -126,6 +126,9 @@ function ProductSearchPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-2xl font-extrabold md:text-3xl">Pesquisar preços</h1>
+      <Link to="/assistente" className="inline-flex min-h-12 items-center rounded-lg border-2 border-primary px-4 font-semibold text-primary hover:bg-primary-soft">
+        Assistente de voz — buscar com orientação
+      </Link>
       <ModeBanner />
       <form
         className="card-surface space-y-5 p-4 md:p-6"
