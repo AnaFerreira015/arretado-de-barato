@@ -1,6 +1,6 @@
 # Assistente de voz Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [x]`) syntax for tracking.
 
 **Goal:** Acrescentar busca guiada acessível por voz e texto com interpretação opcional por IA.
 
@@ -36,11 +36,11 @@
 
 **Interfaces:** `parseCommand(text): Command`; `parseProduct(text): ProductIntent` com descrição, embalagem e variante; `resolveMunicipio(text): number | null`; `matchesVoiceRecord(record, intent): boolean`; `rankVoiceRecords(records, intent): SaleRecord[]`; `describeRecord(record, index, demo): string`.
 
-- [ ] Escrever testes para comandos com acentos, coca/paçoca, 2L/2 litros/2000ml, variante zero, multipack e embalagem desconhecida; município exato; ordenação/deduplicação e data/preço/demonstração falados.
-- [ ] Executar `npm test -- src/lib/voice/intent.test.ts src/lib/voice/results.test.ts`; observar falhas por funcionalidade ausente.
-- [ ] Implementar parser conservador e filtros sem alterar `productMatching.ts`; quantidade normalizada em ml/g com exclusão de multipacks quando tamanho simples pedido.
-- [ ] Executar `npm test`; esperado suite verde.
-- [ ] Commit `Adiciona interpretação guiada e comparação de produtos por voz`.
+- [x] Escrever testes para comandos com acentos, coca/paçoca, 2L/2 litros/2000ml, variante zero, multipack e embalagem desconhecida; município exato; ordenação/deduplicação e data/preço/demonstração falados.
+- [x] Executar `npm test -- src/lib/voice/intent.test.ts src/lib/voice/results.test.ts`; observar falhas por funcionalidade ausente.
+- [x] Implementar parser conservador e filtros sem alterar `productMatching.ts`; quantidade normalizada em ml/g com exclusão de multipacks quando tamanho simples pedido.
+- [x] Executar `npm test`; esperado suite verde.
+- [x] Commit `Adiciona interpretação guiada e comparação de produtos por voz`.
 
 ### Task 2: Interpretação opcional no servidor
 
@@ -48,11 +48,11 @@
 
 **Interfaces:** `interpretVoiceText(text: unknown): Promise<InterpretResponse>`; `interpretVoice` server function `{data:{text:string}}`; resultado discriminado `ok`, proposta estruturada validada ou código de indisponibilidade. `aiIntentSchema` não aceita campos extras nem coordenadas.
 
-- [ ] Testes de ausência de segredo, entrada longa, campo extra, município inválido, 429/500, timeout, JSON inválido e contrato HTTP (sem enviar dados além da frase).
-- [ ] Executar `npm test -- src/lib/voice/ai.test.ts`; observar falhas.
-- [ ] Implementar adaptador REST fixo HTTPS Cloudflare e configuração runtime; validar input antes de enviar, saída via Zod antes de expor, sem logs sensíveis. Sem seguir redirects.
-- [ ] Documentar config e limites; executar `npm test`; esperado verde.
-- [ ] Commit `Integra interpretação opcional com Workers AI no servidor`.
+- [x] Testes de ausência de segredo, entrada longa, campo extra, município inválido, 429/500, timeout, JSON inválido e contrato HTTP (sem enviar dados além da frase).
+- [x] Executar `npm test -- src/lib/voice/ai.test.ts`; observar falhas.
+- [x] Implementar adaptador REST fixo HTTPS Cloudflare e configuração runtime; validar input antes de enviar, saída via Zod antes de expor, sem logs sensíveis. Sem seguir redirects.
+- [x] Documentar config e limites; executar `npm test`; esperado verde.
+- [x] Commit `Integra interpretação opcional com Workers AI no servidor`.
 
 ### Task 3: Voz, fluxo guiado e interface adicional
 
@@ -60,20 +60,24 @@
 
 **Interfaces:** `createSpeechController(callbacks)` com `listen`, `speak`, `stop`, `dispose`, capacidades detectadas; hook próprio coordena draft, estágio, confirmação, paginação, cancelamento, IA e áudio. Interface usa botões e formulários nativos, labels, status e links.
 
-- [ ] Testar gravação pontual pt-BR, negar/ausência de microfone, leitura cancela reconhecimento, parada/saída invalidam eventos tardios.
-- [ ] Executar testes speech; observar falha; implementar controlador e verificar.
-- [ ] Testar fluxo guiado sem IA, confirmação obrigatória, correção, município/GPS, JSON da IA não executa pesquisa, resultados menores entre carregados, vazio paginável, erro de próxima página, stale responses e troca de demo.
-- [ ] Executar testes hook/UI; observar falha; implementar hook independente e interface acessível, IA explicitamente acionada com limite de 5 interpretações por visita à rota.
-- [ ] Adicionar rota e link no início da busca, sem modificar seus controles. Gerar árvore pelo build.
-- [ ] Executar `npm test`, `npm run typecheck`, `npm run build`; esperado verde.
-- [ ] Commit `Adiciona assistente acessível de pesquisa por voz e texto`.
+- [x] Testar gravação pontual pt-BR, negar/ausência de microfone, leitura cancela reconhecimento, parada/saída invalidam eventos tardios.
+- [x] Executar testes speech; observar falha; implementar controlador e verificar.
+- [x] Testar fluxo guiado sem IA, confirmação obrigatória, correção, município/GPS, JSON da IA não executa pesquisa, resultados menores entre carregados, vazio paginável, erro de próxima página, stale responses e troca de demo.
+- [x] Executar testes hook/UI; observar falha; implementar hook independente e interface acessível, IA explicitamente acionada com limite de 5 interpretações por visita à rota.
+- [x] Adicionar rota e link no início da busca, sem modificar seus controles. Gerar árvore pelo build.
+- [x] Executar `npm test`, `npm run typecheck`, `npm run build`; esperado verde.
+- [x] Commit `Adiciona assistente acessível de pesquisa por voz e texto`.
 
 ### Task 4: Revisão, documentação e entrega
 
 **Files:** Finalizar `docs/assistente-voz.md`, spec/plan; patch externo ao repo.
 
-- [ ] Revisar diff inteiro em contexto novo; corrigir problemas importantes com testes de regressão.
-- [ ] Verificar teclado e interface em navegador quando disponível; registrar o que não pôde ser testado (microfone real, leitores de tela, credenciais IA).
-- [ ] Executar suite, TypeScript, build e `git diff --check`; conferir bundle cliente sem código/segredos de servidor.
-- [ ] Documentar instalação via patch, config runtime e roteiro manual NVDA/VoiceOver.
-- [ ] Commit final e gerar patch incremental desde `162e77f`, incluindo commits de design/plan, preservar configs de deploy.
+- [x] Revisar diff inteiro em contexto novo; corrigir problemas importantes com testes de regressão.
+- [x] Verificar teclado e interface em navegador quando disponível; registrar o que não pôde ser testado (microfone real, leitores de tela, credenciais IA).
+- [x] Executar suite, TypeScript, build e `git diff --check`; conferir bundle cliente sem código/segredos de servidor.
+- [x] Documentar instalação via patch, config runtime e roteiro manual NVDA/VoiceOver.
+- [x] Commit final e gerar patch incremental desde `162e77f`, incluindo commits de design/plan, preservar configs de deploy.
+
+## Registro de execução
+
+Implementação concluída na branch `feat/assistente-voz`. A revisão independente reproduziu falhas em multipacks/descrições ambíguas e no estado após rejeição da IA; ambas foram cobertas por regressões que falharam antes da correção. O ambiente não ofereceu navegador instalado, microfone ou leitores de tela: o roteiro manual permanece em `docs/assistente-voz.md`, sem alegação de validação nesses dispositivos.

@@ -1,6 +1,6 @@
 # Assistente de busca por voz — desenho para aprovação
 
-Status: proposta; a usuária escolheu a abordagem híbrida. Implementação ainda não iniciada.
+Status: desenho aprovado pela usuária em 29/10/2026; implementado na branch `feat/assistente-voz`.
 
 ## Intenção e escopo
 
@@ -45,7 +45,7 @@ Cada resultado contém descrição, embalagem quando identificável, valor efeti
 
 ## IA opcional
 
-Proposta: Cloudflare Workers AI via API REST no servidor, por já ser a plataforma de implantação. Usar um adaptador substituível, inicialmente Llama 3.1 8B Instruct, com identificador de modelo configurável no servidor e verificado na implementação. O plano gratuito tem cota; não prometer IA ilimitada nem ativar plano pago automaticamente.
+Cloudflare Workers AI via API REST no servidor, por já ser a plataforma de implantação. Usar um adaptador substituível, inicialmente Llama 3.1 8B Instruct FP8, com identificador de modelo configurável no servidor. A variante FP8 foi escolhida na implementação porque a página do identificador original indicava indisponibilidade no catálogo oficial. O plano gratuito tem cota; não prometer IA ilimitada nem ativar plano pago automaticamente.
 
 Configuração opcional em runtime: `CLOUDFLARE_ACCOUNT_ID`, secret `CLOUDFLARE_AI_API_TOKEN` e `VOICE_AI_MODEL`. Sem credenciais, o fluxo guiado funciona integralmente. REST permite uso local e no Worker sem substituir a configuração de build que a usuária já adaptou. Documentar token restrito à conta e permissão de Workers AI; nunca expor credenciais ao cliente ou usar o token da SEFAZ para a IA.
 

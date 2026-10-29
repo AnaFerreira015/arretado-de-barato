@@ -14,12 +14,26 @@ describe("resultados do assistente", () => {
   it("não confunde multipack ou descrições conflitantes com embalagem simples", () => {
     expect(matchesVoiceRecord(sale("COCA ZERO 6x2L"), intent)).toBe(false);
     expect(matchesVoiceRecord(sale("PACK COCA ZERO 2L 6 UN"), intent)).toBe(false);
-    expect(matchesVoiceRecord({ ...sale("COCA ZERO 350ML"), descricaoSefaz: "COCA ZERO 2L" }, intent)).toBe(false);
+    expect(
+      matchesVoiceRecord({ ...sale("COCA ZERO 350ML"), descricaoSefaz: "COCA ZERO 2L" }, intent),
+    ).toBe(false);
+  });
+  it("rejeita pacotes de doze unidades e tamanho ambíguo mesmo com descrição secundária exata", () => {
+    expect(matchesVoiceRecord(sale("COCA ZERO 2L 12 UN"), intent)).toBe(false);
+    expect(matchesVoiceRecord(sale("COCA ZERO 2L C/12"), intent)).toBe(false);
+    expect(
+      matchesVoiceRecord(
+        { ...sale("COCA ZERO 350ML OU 2L"), descricaoSefaz: "COCA ZERO 2L" },
+        intent,
+      ),
+    ).toBe(false);
   });
   it("filtra antes de ordenar e deduplica registros", () => {
     const a = sale("COCA ZERO 2L", 8, "a");
     const b = sale("COCA ZERO 2000ML", 6, "b");
-    expect(rankVoiceRecords([a, sale("COCA ZERO 350ML", 2), b, a], intent).map(r => r.valorVenda)).toEqual([6, 8]);
+    expect(
+      rankVoiceRecords([a, sale("COCA ZERO 350ML", 2), b, a], intent).map((r) => r.valorVenda),
+    ).toEqual([6, 8]);
   });
   it("fala dados reais e sinaliza demonstração", () => {
     const text = describeRecord(sale("COCA ZERO 2L", 7.5), 1, true);

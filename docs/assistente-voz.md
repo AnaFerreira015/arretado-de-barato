@@ -2,6 +2,24 @@
 
 Função adicional em `/assistente`, acessível pelo início da busca. A pesquisa original permanece disponível. O fluxo guiado e a leitura dos resultados não precisam de LLM. Reconhecimento de voz depende do navegador; texto e teclado estão sempre disponíveis.
 
+## Aplicar o patch
+
+O patch parte do projeto com os patches anteriores de consulta, correspondência de produtos e diagnóstico já aplicados. Ele não altera Vite, Nitro ou a configuração Cloudflare adaptada na sua máquina.
+
+Salve suas alterações locais em commit antes de aplicar. Na raiz do projeto, usando o caminho onde baixou o arquivo:
+
+```bash
+git switch -c feat/assistente-voz
+git am --3way /caminho/assistente-voz.patch
+npm test
+npm run typecheck
+npm run build
+```
+
+`git am` mantém as mensagens e a autoria dos commits incluídos. Se houver conflito, resolva os arquivos apontados, use `git add` nesses arquivos e `git am --continue`; para desfazer somente essa aplicação em andamento, use `git am --abort`. Não substitua seu projeto por um ZIP antigo.
+
+Não há dependências novas. Depois de validar localmente, faça o deploy pelo fluxo que já usa. Acesse `/assistente` ou o botão “Assistente de voz” na pesquisa de produtos.
+
 ## Configuração opcional da IA
 
 No Cloudflare Workers, abra Settings → Variables and Secrets e cadastre em **runtime**, não apenas nas variáveis de build:
@@ -25,6 +43,10 @@ O botão Falar pode enviar áudio ao serviço de reconhecimento do navegador. N�
 A IA propõe campos, e você confere antes de pesquisar. Preços vêm da SEFAZ; não da LLM. Ordenação cobre apenas os registros carregados. Embalagens não identificáveis não confirmam filtro de tamanho. O modo demonstrativo é identificado também na leitura. HTTP 500 da SEFAZ continua sendo indisponibilidade da fonte e permite nova tentativa explícita.
 
 ## Verificação manual
+
+Verificação automatizada em 29/10/2026: 87 testes passaram, incluindo comandos, filtros, fluxo, integração simulada com IA, cancelamento e áudio simulado. TypeScript e build aprovados. A rota `/assistente` respondeu HTTP 200 com HTML do assistente em teste local do servidor de produção; o bundle cliente não contém o adaptador REST nem as variáveis privadas da IA.
+
+Limites desta validação: não foi possível testar microfone real, NVDA, VoiceOver ou dispositivos móveis neste ambiente. Não foram fornecidas credenciais Workers AI, portanto a chamada real à LLM e a implantação Cloudflare precisam ser conferidas na sua conta. Não foi feita consulta real à SEFAZ para validar voz. Use o roteiro abaixo antes de disponibilizar a função ao público.
 
 1. Em Chrome com NVDA e Safari com VoiceOver, abrir Assistente de voz pelo teclado, completar a pesquisa e voltar à busca. Conferir labels, foco e anúncios sem repetição excessiva.
 2. Com respostas faladas inicialmente desligadas, conferir que não há voz competindo com leitor de tela. Habilitar leitura explicitamente, testar repetir/parar/próximo.

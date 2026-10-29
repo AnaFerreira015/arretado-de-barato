@@ -1,20 +1,34 @@
 import { afterEach, expect, it, vi } from "vitest";
 import { createSpeechController, type RecognitionLike } from "./speech";
 
-let instance: RecognitionLike;
 class Recognition {
-  lang = ""; continuous = true; interimResults = true;
+  static latest: Recognition;
+  lang = "";
+  continuous = true;
+  interimResults = true;
   onresult: RecognitionLike["onresult"] = null;
   onerror: RecognitionLike["onerror"] = null;
   onend: RecognitionLike["onend"] = null;
-  start = vi.fn(); abort = vi.fn();
-  constructor() { instance = this; }
+  start = vi.fn();
+  abort = vi.fn();
+  constructor() {
+    Recognition.latest = this;
+  }
 }
 function setup() {
   vi.stubGlobal("SpeechRecognition", Recognition);
   const synth = { cancel: vi.fn(), speak: vi.fn(), getVoices: () => [] };
   vi.stubGlobal("speechSynthesis", synth);
-  vi.stubGlobal("SpeechSynthesisUtterance", class { lang = ""; text: string; constructor(text: string) { this.text = text; } });
+  vi.stubGlobal(
+    "SpeechSynthesisUtterance",
+    class {
+      lang = "";
+      text: string;
+      constructor(text: string) {
+        this.text = text;
+      }
+    },
+  );
   const callbacks = { onText: vi.fn(), onError: vi.fn(), onState: vi.fn() };
   return { controller: createSpeechController(callbacks), synth, callbacks };
 }
@@ -22,19 +36,19 @@ afterEach(() => vi.unstubAllGlobals());
 it("escuta pontual pt-BR e cancela fala antes de gravar", () => {
   const { controller, synth, callbacks } = setup();
   controller.listen();
-  expect(instance.lang).toBe("pt-BR");
-  expect(instance.continuous).toBe(false);
-  expect(instance.interimResults).toBe(false);
+  expect(Recognition.latest.lang).toBe("pt-BR");
+  expect(Recognition.latest.continuous).toBe(false);
+  expect(Recognition.latest.interimResults).toBe(false);
   expect(synth.cancel).toHaveBeenCalled();
-  instance.onresult?.({ results: [[{ transcript: "arroz" }]] });
+  Recognition.latest.onresult?.({ results: [[{ transcript: "arroz" }]] });
   expect(callbacks.onText).toHaveBeenCalledWith("arroz");
 });
 it("interrompe microfone ao falar e ignora callbacks antigos", () => {
   const { controller, synth, callbacks } = setup();
   controller.listen();
-  const stale = instance.onresult;
+  const stale = Recognition.latest.onresult;
   controller.speak("resultado");
-  expect(instance.abort).toHaveBeenCalled();
+  expect(Recognition.latest.abort).toHaveBeenCalled();
   stale?.({ results: [[{ transcript: "não processar" }]] });
   expect(callbacks.onText).not.toHaveBeenCalled();
   expect(synth.speak).toHaveBeenCalledTimes(1);
@@ -42,7 +56,7 @@ it("interrompe microfone ao falar e ignora callbacks antigos", () => {
 it("parada e saída não permitem eventos tardios", () => {
   const { controller, callbacks } = setup();
   controller.listen();
-  const stale = instance.onerror;
+  const stale = Recognition.latest.onerror;
   controller.dispose();
   stale?.({ error: "network" });
   controller.listen();
@@ -51,7 +65,7 @@ it("parada e saída não permitem eventos tardios", () => {
 it("permite texto quando microfone é negado ou não existe", () => {
   const { controller, callbacks } = setup();
   controller.listen();
-  instance.onerror?.({ error: "not-allowed" });
+  Recognition.latest.onerror?.({ error: "not-allowed" });
   expect(callbacks.onError).toHaveBeenCalledWith(expect.stringContaining("negada"));
   vi.stubGlobal("SpeechRecognition", undefined);
   vi.stubGlobal("webkitSpeechRecognition", undefined);
