@@ -50,12 +50,8 @@ export function AppShell({ children }: { children: ReactNode }) {
                   <Link
                     to={n.to}
                     search={n.to === "/assistente" ? { modo: mode } : {}}
-                    activeOptions={{ exact: n.to === "/" }}
-                    className={
-                      n.to === "/assistente"
-                        ? "voice-cta inline-flex min-h-11 items-center gap-2 rounded-xl px-4"
-                        : "inline-flex min-h-11 items-center gap-2 rounded-xl px-3 font-semibold text-muted-foreground hover:bg-accent data-[status=active]:bg-primary-soft data-[status=active]:text-primary"
-                    }
+                    activeOptions={{ exact: n.to === "/", includeSearch: false }}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 font-semibold text-muted-foreground hover:bg-accent data-[status=active]:bg-primary data-[status=active]:text-primary-foreground"
                   >
                     <n.icon aria-hidden className="size-5" />
                     {n.label}
@@ -114,15 +110,15 @@ export function AppShell({ children }: { children: ReactNode }) {
               <Link
                 to={n.to}
                 search={n.to === "/assistente" ? { modo: mode } : {}}
-                activeOptions={{ exact: n.to === "/" }}
+                activeOptions={{ exact: n.to === "/", includeSearch: false }}
                 className="flex min-h-20 flex-col items-center justify-center gap-1 text-xs font-semibold text-muted-foreground data-[status=active]:text-primary"
               >
                 {({ isActive }) => (
                   <>
                     <span
                       className={
-                        n.to === "/assistente"
-                          ? "voice-cta grid h-9 w-14 place-items-center rounded-xl"
+                        isActive
+                          ? "grid h-9 w-14 place-items-center rounded-xl bg-primary text-primary-foreground"
                           : "grid h-9 w-14 place-items-center rounded-xl"
                       }
                     >
