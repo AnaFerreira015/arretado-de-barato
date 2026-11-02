@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { createStore, prefsStore } from "@/lib/store";
 import type { SaleRecord, SearchPage } from "./adapter";
 import type { SearchResponse } from "./api.functions";
@@ -42,6 +42,12 @@ export function useSearchRunner<Q extends { pagina: number; place: Place }>(
   fn: (args: { data: { query: Q; demo: boolean } }) => Promise<SearchResponse>,
 ) {
   const reqId = useRef(0);
+  useEffect(() => () => {
+    reqId.current++;
+    store.set(s => s.status === "loading" || s.status === "loadingMore"
+      ? {...s, status: s.items.length ? "success" : "idle"}
+      : s);
+  }, [store]);
   const run = useCallback(
     async (query: Q, mode: "new" | "more") => {
       const id = ++reqId.current;

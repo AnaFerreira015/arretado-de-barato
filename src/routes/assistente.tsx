@@ -21,7 +21,8 @@ function AssistantPage() {
   return (
     <div className="space-y-4">
       <Link
-        to={modo === "combustivel" ? "/combustiveis" : "/"}
+        to="/"
+        search={{ tipo: modo ?? "produto" }}
         className="inline-flex min-h-11 items-center rounded-md font-semibold text-primary underline"
       >
         Voltar à busca de {modo === "combustivel" ? "combustíveis" : "produtos"}

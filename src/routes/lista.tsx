@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Progress } from "@/components/ui/progress";
-import { PlaceSelector, initialPlace, type PlaceState } from "@/components/eal/PlaceSelector";
-import { PeriodSelect } from "@/components/eal/PeriodSelect";
+import { initialPlace, type PlaceState } from "@/components/eal/PlaceSelector";
+import { SearchLocationFields } from "@/components/search/SearchLocationFields";
 import { FieldError } from "@/components/eal/FieldError";
 import { DataNotice, ModeBanner } from "@/components/eal/Notices";
 import { LIMITS } from "@/lib/economiza/constants";
@@ -132,10 +132,7 @@ function ListPage() {
             Cada item é pesquisado separadamente. Itens com código de barras são comparados com segurança; itens só com nome
             precisam ser associados a um produto para entrar no total.
           </p>
-          <div className="grid gap-5 md:grid-cols-[2fr_1fr]">
-            <PlaceSelector value={place} onChange={setPlace} errors={placeErrors} />
-            <PeriodSelect value={dias} onChange={setDias} />
-          </div>
+          <SearchLocationFields place={place} dias={dias} onPlaceChange={setPlace} onDaysChange={setDias} errors={placeErrors} />
           {progress ? (
             <div className="space-y-2" role="status" aria-live="polite">
               <p className="flex items-center gap-2">
