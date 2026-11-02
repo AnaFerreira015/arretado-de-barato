@@ -80,7 +80,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "description", content: "Pesquise e compare preços registrados em vendas de Alagoas, com dados da SEFAZ/AL." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "theme-color", content: "#1d5e43" },
+      { name: "theme-color", content: "#104D49" },
     ],
     links: [
       {

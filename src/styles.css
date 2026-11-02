@@ -6,7 +6,7 @@
 
 /*
  * Arretado de Barato design system. All colors in oklch.
- * Deep green = savings; light grey canvas; white cards; dark text.
+ * Petroleum green, mango accents and a warm cream canvas.
  */
 
 @theme inline {
@@ -17,6 +17,7 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
+  --color-mango: var(--mango);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -49,22 +50,23 @@
 }
 
 :root {
-  --radius: 0.75rem;
-  --background: oklch(0.968 0.004 160);
-  --foreground: oklch(0.22 0.02 165);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.22 0.02 165);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.02 165);
-  --primary: oklch(0.43 0.1 158);
-  --primary-foreground: oklch(0.99 0.005 160);
-  --primary-soft: oklch(0.94 0.035 158);
-  --secondary: oklch(0.93 0.012 160);
-  --secondary-foreground: oklch(0.25 0.03 165);
-  --muted: oklch(0.945 0.006 160);
-  --muted-foreground: oklch(0.44 0.02 165);
-  --accent: oklch(0.94 0.035 158);
-  --accent-foreground: oklch(0.3 0.08 158);
+  --radius: 1rem;
+  --mango: #F7C548;
+  --background: #FAF8F0;
+  --foreground: #183B38;
+  --card: #FFFFFF;
+  --card-foreground: #183B38;
+  --popover: #FFFFFF;
+  --popover-foreground: #183B38;
+  --primary: #14645C;
+  --primary-foreground: #FFFFFF;
+  --primary-soft: #E5F3EC;
+  --secondary: #F3EBD7;
+  --secondary-foreground: #183B38;
+  --muted: #F0F2EB;
+  --muted-foreground: #52665F;
+  --accent: #E5F3EC;
+  --accent-foreground: #164D43;
   --destructive: oklch(0.5 0.19 27);
   --destructive-foreground: oklch(0.99 0 0);
   --warning: oklch(0.6 0.13 70);
@@ -72,10 +74,10 @@
   --warning-foreground: oklch(0.36 0.08 60);
   --info-soft: oklch(0.95 0.025 240);
   --info-foreground: oklch(0.33 0.07 245);
-  --price: oklch(0.36 0.1 158);
-  --border: oklch(0.86 0.01 160);
-  --input: oklch(0.6 0.015 165);
-  --ring: oklch(0.45 0.13 250);
+  --price: #12584F;
+  --border: #D6E1D9;
+  --input: #78938A;
+  --ring: #9E4C00;
   --shadow-soft: 0 1px 2px oklch(0.2 0.02 165 / 0.08);
   --shadow-card: 0 1px 2px oklch(0.2 0.02 165 / 0.06), 0 4px 14px -6px oklch(0.2 0.02 165 / 0.12);
 }
@@ -140,3 +142,24 @@
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: none; }
 }
+
+/* Shared identity: one visual language for search, lists and the assistant. */
+.search-hero {
+  color: #fff;
+  background: radial-gradient(ellipse at top right, #237C68 0, transparent 62%), #104D49;
+}
+.hero-decoration {
+  position: absolute;
+  right: 2rem;
+  bottom: -2rem;
+  font-family: var(--font-display);
+  font-size: 13rem;
+  font-weight: 800;
+  line-height: 1;
+  color: rgb(255 255 255 / 0.07);
+  transform: rotate(-12deg);
+  pointer-events: none;
+}
+.voice-cta { background: var(--mango); color: #183B38; font-weight: 600; box-shadow: 0 3px 0 #D9A527; }
+.voice-cta:hover { background: #FFD66B; }
+@media (max-width: 639px) { .hero-decoration { display: none; } }

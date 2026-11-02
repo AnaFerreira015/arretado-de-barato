@@ -49,7 +49,7 @@ export function RecordCard({
 }) {
   const inCompare = compareStore.use().some((c) => c.id === r.id);
   return (
-    <article className="card-surface fade-in flex flex-col gap-3 p-4" aria-labelledby={`t-${r.id}`}>
+    <article className="card-surface fade-in flex flex-col gap-4 p-5" aria-labelledby={`t-${r.id}`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <h3 id={`t-${r.id}`} className="text-lg font-semibold break-words">
@@ -63,7 +63,7 @@ export function RecordCard({
           </p>
         </div>
         <div className="text-right">
-          <p className="price-text text-2xl leading-none">{priceLabel(r)}</p>
+          <p className="price-text text-3xl leading-none">{priceLabel(r)}</p>
           <p className="mt-1 text-sm text-muted-foreground">por {r.unidade}</p>
           {cheapest && (
             <p className="mt-1 inline-block rounded-full bg-primary-soft px-2 py-0.5 text-xs font-semibold text-accent-foreground">

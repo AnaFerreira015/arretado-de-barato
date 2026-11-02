@@ -20,13 +20,17 @@
 - Filtros de favoritos não apagam registros nem deixam estado vazio sem explicação.
 
 ### Task 1: Consolidar busca
-- [ ] Testar modo, preservação de filtros e cancelamento antes de implementar.
-- [ ] Extrair painéis das rotas e controles compartilhados; redirecionar combustível.
-- [ ] Atualizar favoritos/retorno da voz e testar fluxo.
-- [ ] Commit com autoria da usuária.
+- [x] Testar modo, preservação de filtros e cancelamento antes de implementar.
+- [x] Extrair painéis das rotas e controles compartilhados; redirecionar combustível.
+- [x] Atualizar favoritos/retorno da voz e testar fluxo.
+- [x] Commit com autoria da usuária.
 
 ### Task 2: Identidade visual e navegação
-- [ ] Aplicar tokens, hero, acesso de voz destacado e navegação móvel.
-- [ ] Testar filtros de favoritos e navegação acessível.
-- [ ] Executar suite, tipos, build, revisão e verificação visual se navegador disponível.
-- [ ] Commit e patch incremental desde 3d3953d.
+- [x] Aplicar tokens, hero, acesso de voz destacado e navegação móvel.
+- [x] Testar filtros de favoritos e navegação acessível.
+- [x] Executar suite, tipos, build, revisão e verificação visual se navegador disponível.
+- [x] Commit e patch incremental desde 3d3953d.
+
+## Registro da execução
+
+Task 1: 4da3f26. Task 2: tema compartilhado, navegação, favoritos e testes de integração. Suite final 143 testes; typecheck, lint direcionado, build e smoke HTTP aprovados. Revisão independente identificou que paginação com zero correspondências poderia voltar a idle após troca de painel; regressão reproduzida antes da correção e suite verde depois. Contraste dos principais textos calculado >= 4,5:1. Navegador indisponível após falha do download; validação visual real explicitamente pendente. Sem alterações de provedor/deploy ou push. Patch base 3d3953d.

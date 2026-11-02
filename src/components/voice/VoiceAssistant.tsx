@@ -1,3 +1,4 @@
+import { TypeFilter } from "@/components/search/TypeFilter";
 import { useId, useRef, useState } from "react";
 import { Mic, Search, Square, Volume2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,24 +27,13 @@ export function VoiceAssistant({ initialMode = "produto" }: { initialMode?: Sear
   return (
     <div className="space-y-5">
       <div className="card-surface p-4 md:p-6">
-        <fieldset className="min-w-0">
-          <legend className="mb-3 text-lg font-bold">O que pesquisar?</legend>
-          <div className="flex flex-wrap gap-5">
-            {(["produto", "combustivel"] as const).map((mode) => (
-              <label key={mode} className="flex min-h-11 items-center gap-2 font-semibold">
-                <input
-                  type="radio"
-                  name={`${id}-mode`}
-                  value={mode}
-                  checked={state.draft.mode === mode}
-                  onChange={() => assistant.setMode(mode)}
-                  className="size-5 accent-primary"
-                />
-                {mode === "produto" ? "Produtos" : "Combustíveis"}
-              </label>
-            ))}
-          </div>
-        </fieldset>
+        <TypeFilter
+          value={state.draft.mode}
+          label="O que pesquisar?"
+          onChange={(mode) => {
+            if (mode !== "todos") assistant.setMode(mode);
+          }}
+        />
       </div>
       <section className="card-surface space-y-4 p-4 md:p-6" aria-labelledby={`${id}-settings`}>
         <h2 id={`${id}-settings`} className="text-lg font-bold">

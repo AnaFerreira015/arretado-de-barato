@@ -45,7 +45,7 @@ export function useSearchRunner<Q extends { pagina: number; place: Place }>(
   useEffect(() => () => {
     reqId.current++;
     store.set(s => s.status === "loading" || s.status === "loadingMore"
-      ? {...s, status: s.items.length ? "success" : "idle"}
+      ? {...s, status: s.meta ? "success" : "idle"}
       : s);
   }, [store]);
   const run = useCallback(
