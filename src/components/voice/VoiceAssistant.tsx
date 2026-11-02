@@ -39,7 +39,23 @@ export function VoiceAssistant({ initialMode = "produto" }: { initialMode?: Sear
         <h2 id={`${id}-settings`} className="text-lg font-bold">
           Você escolhe como conversar
         </h2>
-        <p>Responda por texto, teclado ou voz. A busca guiada funciona sem IA.</p>
+        <p>
+          Fale ou digite o que procura. Quando o pedido estiver completo, a busca começa
+          automaticamente.
+        </p>
+        <label className="flex min-h-11 items-center gap-3 font-semibold">
+          <input
+            type="checkbox"
+            className="size-5 accent-primary"
+            checked={state.automaticSearch}
+            onChange={(e) => assistant.setAutomaticSearch(e.target.checked)}
+          />
+          Pesquisar automaticamente
+        </label>
+        <p className="text-sm text-muted-foreground">
+          Desative para conferir os campos antes de cada busca. Você pode corrigir o pedido ou usar
+          Parar a qualquer momento.
+        </p>
         <label className="flex min-h-11 items-center gap-3 font-semibold">
           <input
             type="checkbox"
@@ -390,8 +406,8 @@ export function VoiceAssistant({ initialMode = "produto" }: { initialMode?: Sear
             localização GPS, histórico ou resultados. Evite incluir dados pessoais.
           </p>
           <p className="text-sm text-muted-foreground">
-            A IA tem cota gratuita e pode errar. Você vai conferir os campos antes da pesquisa. Se
-            ela não funcionar, continue pela busca guiada.
+            A IA pode errar e está sujeita à cota da sua conta. Confira o pedido nos resultados e
+            corrija se necessário. Desative a busca automática se preferir confirmar antes.
           </p>
           <label htmlFor={`${id}-ai`} className="block font-semibold">
             Pedido completo para a IA
@@ -407,7 +423,7 @@ export function VoiceAssistant({ initialMode = "produto" }: { initialMode?: Sear
           />
           <div className="flex flex-wrap gap-2">
             <Button
-              disabled={busy || !aiText.trim() || state.aiAttempts >= 5}
+              disabled={busy || !aiText.trim()}
               onClick={() => {
                 void assistant.interpret(aiText);
                 responseRef.current?.focus();
@@ -424,8 +440,8 @@ export function VoiceAssistant({ initialMode = "produto" }: { initialMode?: Sear
             </Button>
           </div>
           <p className="text-sm text-muted-foreground">
-            {5 - state.aiAttempts} interpretações restantes nesta visita. O modo guiado não usa essa
-            cota.
+            As cotas do provedor continuam valendo. Os comandos e as respostas resolvidos localmente
+            não consomem tokens da IA.
           </p>
         </div>
       </details>

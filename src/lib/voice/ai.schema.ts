@@ -19,6 +19,7 @@ export const aiIntentSchema = z
     raio: z.number().int().min(LIMITS.raioMin).max(LIMITS.raioMax).nullable(),
     dias: z.number().int().min(LIMITS.diasMin).max(LIMITS.diasMax).nullable(),
     esclarecer: z.boolean(),
+    pergunta: z.string().trim().min(1).max(200).nullable().default(null),
     usarLocalizacao: z.boolean().default(false),
   })
   .strict()
@@ -48,6 +49,7 @@ export const voiceContextSchema = z
     municipio: z.string().max(80),
     raio: z.number().int().min(1).max(15),
     dias: z.number().int().min(1).max(10),
+    pergunta: z.string().trim().max(200).nullable().default(null),
     etapa: z.enum([
       "product",
       "fuel",

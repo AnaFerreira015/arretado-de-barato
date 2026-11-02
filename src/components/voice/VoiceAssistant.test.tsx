@@ -37,6 +37,7 @@ it("oferece fluxo de texto completo, labels e confirmação sem ativar voz", asy
     },
   });
   render(<VoiceAssistant />);
+  fireEvent.click(screen.getByRole("checkbox", { name: "Pesquisar automaticamente" }));
   expect(screen.getByRole("checkbox", { name: "Ativar respostas faladas" })).not.toBeChecked();
   expect(screen.getByText(/não oferece reconhecimento de voz/i)).toBeVisible();
   send("buscar coca zero 2 litros");
@@ -57,6 +58,7 @@ it("oferece fluxo de texto completo, labels e confirmação sem ativar voz", asy
 it("microfone e IA têm avisos e erro não apaga o pedido", async () => {
   interpret.mockResolvedValue({ ok: false, code: "quota", message: "Continue pelo modo guiado." });
   render(<VoiceAssistant />);
+  fireEvent.click(screen.getByRole("checkbox", { name: "Pesquisar automaticamente" }));
   expect(screen.getByText(/áudio ao serviço de reconhecimento/)).toBeInTheDocument();
   fireEvent.click(screen.getByText("Interpretar um pedido completo com IA (opcional)"));
   fireEvent.change(screen.getByLabelText("Pedido completo para a IA"), {
@@ -89,6 +91,7 @@ it("abre combustíveis, pula embalagem e apresenta preço por litro", async () =
     },
   });
   render(<VoiceAssistant initialMode="combustivel" />);
+  fireEvent.click(screen.getByRole("checkbox", { name: "Pesquisar automaticamente" }));
   expect(screen.getByRole("radio", { name: "Combustíveis" })).toBeChecked();
   fireEvent.change(screen.getByLabelText("Tipo de combustível"), {
     target: { value: "Gasolina comum" },
@@ -101,4 +104,31 @@ it("abre combustíveis, pula embalagem e apresenta preço por litro", async () =
   );
   expect(screen.queryByText(/Os tamanhos podem variar/)).not.toBeInTheDocument();
   expect(search).not.toHaveBeenCalled();
+});
+
+it("inicia busca pelo texto completo com busca automática ativada", async () => {
+  search.mockResolvedValue({
+    ok: true,
+    demo: false,
+    cached: false,
+    fetchedAt: "2026-11-02",
+    page: {
+      items: [],
+      invalidCount: 0,
+      pagina: 1,
+      totalPaginas: 1,
+      totalRegistros: 0,
+      registrosPagina: 0,
+      registrosPorPagina: 100,
+      primeiraPagina: true,
+      ultimaPagina: true,
+    },
+  });
+  render(<VoiceAssistant />);
+  expect(screen.getByRole("checkbox", { name: "Pesquisar automaticamente" })).toBeChecked();
+  send("quero arroz em Maceió");
+  await waitFor(() =>
+    expect(screen.getByRole("heading", { name: "Resultados da busca" })).toBeVisible(),
+  );
+  expect(search).toHaveBeenCalledTimes(1);
 });

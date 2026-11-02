@@ -74,8 +74,9 @@ type State = {
   message: string;
   error: string | null;
   transcript: string;
-  aiAttempts: number;
   automaticAi: boolean;
+  automaticSearch: boolean;
+  needsClarification: boolean;
   audio: AudioState;
   spoken: boolean;
   canListen: boolean;
@@ -94,8 +95,9 @@ const initial = (mode: SearchMode): State => ({
   message: promptFor(mode === "combustivel" ? "fuel" : "product", newDraft(mode)),
   error: null,
   transcript: "",
-  aiAttempts: 0,
   automaticAi: true,
+  automaticSearch: true,
+  needsClarification: false,
   audio: "idle",
   spoken: false,
   canListen: false,
@@ -137,6 +139,7 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
   }
   function setMode(mode: SearchMode) {
     invalidate();
+    update({ needsClarification: false });
     advance(mode === "combustivel" ? "fuel" : "product", newDraft(mode));
   }
   function stop() {
@@ -205,6 +208,10 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
   async function run(more = false) {
     const s = current.current;
     if (s.busy) return;
+    if (s.needsClarification) {
+      announce(s.message);
+      return;
+    }
     if (!more && s.stage !== "confirm") {
       announce("Conclua os campos e confira a busca antes de confirmar.", true);
       return;
@@ -306,18 +313,18 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
       )
         throw new Error("invalid coordinates");
       update({ busy: null });
-      advance(
-        finish
-          ? nextRequired({ ...current.current.draft, coords })
+      const draft = { ...current.current.draft, coords, municipio: "" };
+      if (current.current.needsClarification) {
+        update({ draft });
+        return;
+      }
+      const stage =
+        finish || current.current.automaticSearch
+          ? nextRequired(draft)
           : current.current.stage === "place"
             ? "radius"
-            : current.current.stage,
-        {
-          ...current.current.draft,
-          coords,
-          municipio: "",
-        },
-      );
+            : current.current.stage;
+      await completeDraft(stage, draft);
     } catch {
       if (id !== request.current) return;
       update({ busy: null, draft: { ...current.current.draft, coords: null } });
@@ -330,19 +337,15 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
     if (draft.mode === "produto" && !draft.descricao) return "product";
     return draft.municipio || draft.coords ? "confirm" : "place";
   }
+  async function completeDraft(stage: Stage, draft: Draft) {
+    update({ needsClarification: false });
+    advance(stage, draft);
+    if (stage === "confirm" && current.current.automaticSearch) await run();
+  }
   async function interpret(text: string, contextual = false) {
     if (current.current.busy) return;
     if (!text.trim() || text.trim().length > 500) {
       announce("Escreva um pedido de até 500 caracteres.", true);
-      return;
-    }
-    if (current.current.aiAttempts >= 5) {
-      invalidate();
-      advance(
-        current.current.draft.mode === "combustivel" ? "fuel" : "product",
-        newDraft(current.current.draft.mode),
-      );
-      announce("Limite de interpretações desta visita atingido. Continue pelo modo guiado.", true);
       return;
     }
     const previous = current.current;
@@ -357,18 +360,23 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
           raio: previous.draft.raio,
           dias: previous.draft.dias,
           etapa: previous.stage,
+          pergunta: previous.needsClarification ? previous.message : null,
         }
       : undefined;
     invalidate();
     const id = ++request.current;
     update({
       busy: "ai",
+      needsClarification: false,
       transcript: text,
-      aiAttempts: current.current.aiAttempts + 1,
       draft: newDraft(current.current.draft.mode),
       stage: current.current.draft.mode === "combustivel" ? "fuel" : "product",
     });
-    announce("Interpretando pedido com IA. Você ainda vai conferir antes de pesquisar.");
+    announce(
+      current.current.automaticSearch
+        ? "Entendendo seu pedido para pesquisar."
+        : "Entendendo seu pedido. Você vai conferir antes de pesquisar.",
+    );
     let result: InterpretResponse;
     try {
       result = await services.current.interpret({
@@ -405,20 +413,24 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
     };
     if (contextual && !intent.municipio && !intent.usarLocalizacao && !intent.esclarecer)
       draft.coords = previous.draft.coords;
-    if (intent.esclarecer && draft.mode === "produto") draft.descricao = "";
-    advance(nextRequired(draft), draft);
-    if (intent.usarLocalizacao && !intent.esclarecer) await requestLocation(true);
-    if (intent.esclarecer && draft.mode === "combustivel")
+    if (intent.esclarecer) {
+      update({ needsClarification: true });
+      advance(draft.mode === "combustivel" ? "fuel" : "product", draft);
       announce(
-        `O pedido precisa de esclarecimento. Vamos pesquisar um combustível por vez. ${promptFor("fuel", draft)}`,
-        true,
+        intent.pergunta ||
+          (draft.mode === "combustivel"
+            ? `Vamos pesquisar um combustível por vez. ${promptFor("fuel", draft)}`
+            : "Qual produto você quer pesquisar? Preciso esclarecer seu pedido antes de buscar."),
       );
-    if (intent.esclarecer && draft.mode === "produto")
-      announce(
-        "O pedido precisa de esclarecimento. Vamos pesquisar um produto por vez. Qual produto?",
-        true,
-      );
+      return;
+    }
+    if (intent.usarLocalizacao) {
+      update({ needsClarification: false });
+      advance("place", { ...draft, municipio: "", coords: null });
+      await requestLocation(true);
+    } else await completeDraft(nextRequired(draft), draft);
   }
+
   async function interpretNatural(text: string) {
     if (!current.current.automaticAi) {
       invalidate();
@@ -521,6 +533,14 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
       );
       return;
     }
+    if (current.current.needsClarification) {
+      if (affirmative(value) || keepChoice(value)) {
+        announce(current.current.message);
+        return;
+      }
+      await interpretNatural(value);
+      return;
+    }
     if (affirmative(value) && stage === "confirm") {
       await run();
       return;
@@ -532,21 +552,25 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
     const natural = naturalRequest(value, draft, stage);
     if (natural) {
       invalidate();
-      advance(nextRequired(natural.draft), natural.draft);
-      if (natural.location) await requestLocation(true);
+      if (natural.location) {
+        advance("place", natural.draft);
+        await requestLocation(true);
+      } else await completeDraft(nextRequired(natural.draft), natural.draft);
       return;
     }
-    const freeRequest =
-      /^(?:eu |agora |na verdade|quero|queria|gostaria|preciso|onde|me |voce |pode |tem |estou |encontr|mostr|acha|troqu|mud|procure|busque)/.test(
-        normalized,
-      ) ||
-      /\b(?:nao|ou|exceto)\b|\be\b/.test(normalized) ||
-      normalized.split(" ").length > 7 ||
-      value.includes("?");
-    if (
-      (freeRequest && !((stage === "size" || stage === "variant") && anyChoice(value))) ||
-      ((stage === "confirm" || stage === "results") && !keepChoice(value))
-    ) {
+    const simpleFuel = parseFuelRequest(value, draft.mode === "combustivel");
+    const simpleProduct = /^[\p{L}\p{N}-]{3,50}$/u.test(normalized);
+    const fieldAnswer =
+      (stage === "product" && (simpleProduct || simpleFuel)) ||
+      (stage === "fuel" && (simpleFuel || keepChoice(value))) ||
+      (stage === "size" && (anyChoice(value) || keepChoice(value) || parseSize(value))) ||
+      (stage === "variant" &&
+        (anyChoice(value) ||
+          keepChoice(value) ||
+          /^(zero|integral|desnatado|tradicional|sem lactose|sem acucar)$/.test(normalized))) ||
+      (stage === "place" && canonicalMunicipio(value)) ||
+      ((stage === "radius" || stage === "days") && guidedNumber(normalized) >= 0);
+    if (!fieldAnswer) {
       await interpretNatural(value);
       return;
     }
@@ -567,10 +591,7 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
           municipio: fuel?.municipio ?? draft.municipio,
           coords: fuel?.municipio ? null : draft.coords,
         };
-        advance(
-          !next.tipoCombustivel ? "fuel" : next.municipio || next.coords ? "confirm" : "place",
-          next,
-        );
+        await completeDraft(nextRequired(next), next);
         return;
       }
       const product = parseProduct(value);
@@ -581,8 +602,14 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
       }
       invalidate();
       const next = { ...draft, ...product };
-      advance(
-        product.embalagem ? (product.variante ? nextRequired(next) : "variant") : "size",
+      await completeDraft(
+        current.current.automaticSearch
+          ? nextRequired(next)
+          : product.embalagem
+            ? product.variante
+              ? nextRequired(next)
+              : "variant"
+            : "size",
         next,
       );
     } else if (stage === "size") {
@@ -594,21 +621,28 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
         );
         return;
       }
-      advance(draft.variante ? nextRequired(draft) : "variant", { ...draft, embalagem });
+      await completeDraft(
+        current.current.automaticSearch || draft.variante ? nextRequired(draft) : "variant",
+        { ...draft, embalagem },
+      );
     } else if (stage === "variant") {
       const variante = keepChoice(value) ? draft.variante : anyChoice(value) ? "" : value;
       if (variante.length > 50) {
         announce("Use até 50 caracteres para a variante.", true);
         return;
       }
-      advance(nextRequired(draft), { ...draft, variante });
+      await completeDraft(nextRequired(draft), { ...draft, variante });
     } else if (stage === "place") {
       const municipio = canonicalMunicipio(value);
       if (!municipio) {
         await interpretNatural(value);
         return;
       }
-      advance("confirm", { ...draft, municipio, coords: null });
+      await completeDraft(nextRequired({ ...draft, municipio }), {
+        ...draft,
+        municipio,
+        coords: null,
+      });
     } else if (stage === "radius" || stage === "days") {
       const number = guidedNumber(normalized);
       const max = stage === "radius" ? 15 : 10;
@@ -616,7 +650,10 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
         announce(`Informe um número inteiro de 1 a ${max}.`, true);
         return;
       }
-      advance("confirm", { ...draft, [stage === "radius" ? "raio" : "dias"]: number });
+      await completeDraft(nextRequired(draft), {
+        ...draft,
+        [stage === "radius" ? "raio" : "dias"]: number,
+      });
     } else {
       announce(promptFor(stage, draft), true);
     }
@@ -634,6 +671,9 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
     stop,
     listen() {
       if (!current.current.busy) speech.current?.listen();
+    },
+    setAutomaticSearch(enabled: boolean) {
+      update({ automaticSearch: enabled });
     },
     setAutomaticAi(enabled: boolean) {
       if (current.current.busy === "ai") stop();

@@ -34,13 +34,13 @@ Crie o token na página Workers AI → Use REST API → Create a Workers AI API 
 
 Localmente, coloque os mesmos valores em `.env.local`, ignorado pelo Git, e reinicie o servidor. Nunca use prefixo `VITE_` para esses secrets. Não é necessário mudar Vite, presets Nitro nem criar um binding de AI: a integração usa REST no servidor. Sem credenciais, continue pelo modo guiado.
 
-O plano gratuito tem cota compartilhada pela conta. A aplicação não ativa contratação nem garante uso ilimitado. Há no máximo cinco tentativas de interpretação por visita ao assistente, uma de cada vez; isso evita cliques acidentais, não impede abuso de endpoint público. Para proteção adicional, configure limites na borda conforme seu plano Cloudflare. Não habilite cobrança automática se seu objetivo é permanecer na franquia gratuita. Falha, demora ou cota da IA não bloqueiam a pesquisa guiada.
+O plano gratuito tem cota compartilhada pela conta. A aplicação não ativa contratação nem garante uso ilimitado. Há uma interpretação por vez, com timeout. A versão de busca direta não impõe mais o limite artificial de cinco tentativas por visita; cotas do provedor continuam valendo. Para proteção adicional, configure limites na borda conforme seu plano Cloudflare. Não habilite cobrança automática se seu objetivo é permanecer na franquia gratuita. Falha, demora ou cota da IA não bloqueiam a pesquisa guiada.
 
 ## Dados e privacidade
 
 O botão Falar pode enviar áudio ao serviço de reconhecimento do navegador. Não há escuta automática. Com “Usar IA para entender frases complexas” ativado, pedidos não resolvidos localmente enviam o texto digitado/transcrito e os campos atuais da busca à Cloudflare. A opção pode ser desativada; o botão separado de interpretação continua disponível. Não enviamos histórico, coordenadas GPS, resultados ou favoritos à IA. Não escreva dados pessoais no pedido. Não armazenamos transcrições/gravações. A localização só é solicitada por ação explícita e não é persistida.
 
-A IA propõe campos, e você confere antes de pesquisar. Preços vêm da SEFAZ; não da LLM. Ordenação cobre apenas os registros carregados. Embalagens não identificáveis não confirmam filtro de tamanho. O modo demonstrativo é identificado também na leitura. HTTP 500 da SEFAZ continua sendo indisponibilidade da fonte e permite nova tentativa explícita.
+Com a busca automática ativada, campos suficientes iniciam a consulta. Desative “Pesquisar automaticamente” para conferir antes de pesquisar. Preços vêm da SEFAZ; não da LLM. Ordenação cobre apenas os registros carregados. Embalagens não identificáveis não confirmam filtro de tamanho. O modo demonstrativo é identificado também na leitura. HTTP 500 da SEFAZ continua sendo indisponibilidade da fonte e permite nova tentativa explícita.
 
 ## Verificação manual
 
@@ -99,3 +99,18 @@ Informações fornecidas não são perguntadas novamente; pedidos completos vão
 Correções complexas enviam os campos atuais validados ao modelo. Mudança de produto limpa tamanho e variante; correção do mesmo produto preserva campos não alterados. Cancelamento ignora respostas pendentes. Quando uma interpretação falha ou está desativada e o pedido não é compreendido, a confirmação anterior é invalidada e o usuário pode retomar pelo modo guiado.
 
 Validação automatizada: 135 testes, incluindo pedidos completos, correções, contexto sem GPS, quantidade antes do produto, exclusões, fallback, cancelamento e confirmação. TypeScript, lint do assistente e build verificados. A revisão independente encontrou três casos de interpretação local, corrigidos com regressões RED→GREEN. Não houve validação de microfone real, leitores de tela, modelo remoto nem deploy Cloudflare nesta alteração.
+
+
+## Busca direta e ajuste da navegação — 02/11/2026
+
+Após `interface-unificada.patch`, aplique `voz-direta-e-navegacao.patch` com `git am --3way`.
+
+Pedidos completos passam a pesquisar automaticamente. Quando falta município, somente ele é solicitado; tamanho e variante ausentes são opcionais. Respostas não reconhecidas vão à IA em qualquer etapa, sem exigir prefixos como “quero” ou “buscar”. A integração existente deve estar configurada para interpretar essas frases livres. Frases simples continuam locais. “Pesquisar automaticamente” pode ser desativado para manter a confirmação manual.
+
+A IA pode retornar uma pergunta curta específica de esclarecimento. Um “sim” não executa uma intenção ainda ambígua. A pergunta é incluída como contexto no próximo turno, sem GPS, áudio ou resultados. Erro, cota, resposta inválida e cancelamento não executam a busca anterior. Não há promessa de compreensão perfeita ou de uso ilimitado do provedor.
+
+A navegação deixou de colorir “Por voz” permanentemente. A aba ativa recebe o mesmo destaque verde no desktop e celular, inclusive Buscar com filtros na URL. O botão de voz junto à busca mantém destaque de ação.
+
+Validação: 155 testes passaram; TypeScript, lint direcionado e build aprovados. A revisão independente foi tentada, mas ficou indisponível por limite de uso; foi realizada revisão própria dos caminhos alterados. Não houve teste com microfone real, modelo remoto, leitor de tela ou validação visual em navegador. Nenhum deploy realizado.
+
+A interface de chat e a nova marca regional são propostas para a próxima etapa; este patch não as implementa.

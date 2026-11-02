@@ -28,6 +28,7 @@ function setup(search = vi.fn().mockResolvedValue(page())) {
     .mockResolvedValue({ ok: false, code: "quota", message: "Continue pelo modo guiado." });
   const locate = vi.fn().mockRejectedValue(new Error("denied"));
   const hook = renderHook(() => useVoiceAssistant({ search, interpret, locate }));
+  act(() => hook.result.current.setAutomaticSearch(false));
   const answer = async (text: string) => {
     await act(async () => {
       await hook.result.current.answer(text);
@@ -212,6 +213,7 @@ it("consulta combustíveis sem embalagem e confirma município extraído", async
       page(1, [{ ...sale("GAS COMUM", 5.899), kind: "combustivel", unidade: "LT" }]),
     );
   const h = renderHook(() => useVoiceAssistant({ search, searchFuel }));
+  act(() => h.result.current.setAutomaticSearch(false));
   await act(async () => {
     await h.result.current.answer("buscar gasolina comum mais barata em Maceió");
   });
@@ -245,6 +247,7 @@ it("gasolina ambígua exige tipo e troca de modo descarta resposta tardia", asyn
       }),
   );
   const h = renderHook(() => useVoiceAssistant({ searchFuel }));
+  act(() => h.result.current.setAutomaticSearch(false));
   await act(async () => {
     await h.result.current.answer("gasolina");
   });
@@ -286,6 +289,7 @@ it("IA identifica combustível e apresenta confirmação sem perguntar tipo nova
   });
   const searchFuel = vi.fn();
   const h = renderHook(() => useVoiceAssistant({ interpret, searchFuel }));
+  act(() => h.result.current.setAutomaticSearch(false));
   await act(async () => {
     await h.result.current.interpret("GNV em Maceió");
   });
@@ -300,6 +304,7 @@ it("IA identifica combustível e apresenta confirmação sem perguntar tipo nova
 
 it("preserva álcool como produto e reconhece o sinônimo no modo combustível", async () => {
   const h = renderHook(() => useVoiceAssistant());
+  act(() => h.result.current.setAutomaticSearch(false));
   await act(async () => {
     await h.result.current.answer("álcool");
   });
@@ -328,6 +333,7 @@ it("esclarecimento da IA exige nova escolha de um combustível", async () => {
   });
   const searchFuel = vi.fn();
   const h = renderHook(() => useVoiceAssistant({ interpret, searchFuel }));
+  act(() => h.result.current.setAutomaticSearch(false));
   await act(async () => {
     await h.result.current.interpret("gasolina e etanol em Maceió");
   });
