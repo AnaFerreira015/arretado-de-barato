@@ -29,9 +29,7 @@ export function SearchHub({
             Produtos e combustíveis, em uma só busca. Compare preços registrados perto de você.
           </p>
         </div>
-        <span className="hero-decoration" aria-hidden>
-          R$
-        </span>
+        <img src="/logo.svg" alt="" width={208} height={208} className="hero-decoration" />
       </section>
       <ModeBanner />
       <section

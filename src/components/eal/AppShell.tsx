@@ -34,7 +34,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               aria-hidden
               className="grid size-10 shrink-0 place-items-center rounded-xl bg-primary text-xl text-primary-foreground"
             >
-              R$
+              <img src="/logo.svg" alt="" width={40} height={40} className="size-10" />
             </span>
             <span className="max-w-36 text-base leading-tight sm:max-w-44 sm:text-xl">
               Arretado de Barato
