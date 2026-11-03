@@ -65,7 +65,7 @@ export function InstallApp() {
           type="button"
           onClick={install}
           disabled={busy}
-          className="mb-3 inline-flex min-h-11 items-center gap-2 rounded-xl border border-input bg-card px-4 font-semibold text-primary disabled:opacity-60"
+          className="mb-3 inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-input bg-card px-4 font-semibold text-primary hover:bg-accent disabled:cursor-wait disabled:opacity-60"
         >
           <Download aria-hidden className="size-5" />
           {busy ? "Abrindo instalação…" : "Instalar aplicativo"}
