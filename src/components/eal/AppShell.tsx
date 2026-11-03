@@ -87,6 +87,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
+      <InstallApp />
       <main
         id="conteudo"
         tabIndex={-1}
@@ -103,7 +104,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             aplicativo oficial do governo.
           </p>
         </div>
-        <InstallApp />
       </footer>
       <nav
         aria-label="Navegação inferior"

@@ -27,15 +27,21 @@ function offer(outcome: "accepted" | "dismissed" = "dismissed", fail = false) {
 }
 it("oferece instruções manuais sem prometer suporte", () => {
   render(<InstallApp />);
-  expect(screen.queryByRole("button", { name: "Instalar aplicativo" })).not.toBeInTheDocument();
+  const button = screen.getByRole("button", { name: "Instalar app grátis" });
+  expect(button).toBeVisible();
+  expect(button).toHaveAttribute("aria-expanded", "false");
+  fireEvent.click(button);
+  expect(button).toHaveAttribute("aria-expanded", "true");
+  expect(screen.getByText(/No iPhone ou iPad/)).toBeVisible();
   expect(screen.getByText(/No iPhone ou iPad/)).toBeInTheDocument();
 });
 it.each(["accepted", "dismissed"] as const)("consome o convite uma vez: %s", async (outcome) => {
   render(<InstallApp />);
   const { event, prompt } = offer(outcome);
   expect(event.defaultPrevented).toBe(true);
-  fireEvent.click(screen.getByRole("button", { name: "Instalar aplicativo" }));
-  await waitFor(() => expect(screen.queryByRole("button")).not.toBeInTheDocument());
+  fireEvent.click(screen.getByRole("button", { name: "Instalar app grátis" }));
+  await waitFor(() => expect(screen.getByRole("button")).toBeEnabled());
+  expect(screen.getByRole("button")).toHaveAttribute("aria-expanded", "true");
   expect(prompt).toHaveBeenCalledOnce();
   expect(screen.getByRole("status")).toHaveTextContent(
     outcome === "accepted" ? /Instalação solicitada/ : /instalar depois/,
