@@ -1,9 +1,10 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
   <rect width="64" height="64" rx="14" fill="#234F6B"/>
   <text x="31" y="53" font-family="Arial, sans-serif" font-size="34" font-weight="800" text-anchor="middle" fill="#F1D9BC">R$</text>
-  <g transform="translate(30 5) rotate(22 15 17)">
-    <path d="M4 17C4 9 9 5 16 5s12 4 12 12Z" fill="#C87D59"/>
-    <path d="M1 15Q5 14 7 17Q16 20 25 17Q28 14 31 15L29 21Q16 25 3 21Z" fill="#C87D59"/>
-    <path d="M8 15Q9 9 15 8M5 19Q16 23 27 19" fill="none" stroke="#633A2C" stroke-width="1.2" stroke-linecap="round"/>
+  <g transform="translate(25 6) rotate(18 18 17)">
+    <path d="M6 18C6 7 12 4 18 4S30 7 30 18Z" fill="#AC6848"/>
+    <path d="M2 10Q8 12 18 18Q28 12 34 10L32 24Q18 29 4 24Z" fill="#D3946D" stroke="#633A2C" stroke-width="1.2" stroke-linejoin="round"/>
+    <path d="M5 14 7 22Q18 26 29 22L31 14" fill="none" stroke="#F1D9BC" stroke-width="1.2" stroke-dasharray="1.5 2"/>
+    <path d="m18 17 1.2 2.3 2.6.4-1.9 1.8.5 2.6-2.4-1.2-2.4 1.2.5-2.6-1.9-1.8 2.6-.4Z" fill="#633A2C"/>
   </g>
 </svg>

@@ -162,6 +162,6 @@
   transform: rotate(-12deg);
   pointer-events: none;
 }
-.voice-cta { background: var(--terracotta); color: #FFFFFF; font-weight: 600; box-shadow: 0 3px 0 var(--terracotta-hover); }
-.voice-cta:hover { background: var(--terracotta-hover); }
+.voice-cta { background: #EAF1F5; color: #234F6B; border: 1px solid #839BAA; font-weight: 600; box-shadow: var(--shadow-soft); }
+.voice-cta:hover { background: #DBE7EE; }
 @media (max-width: 639px) { .hero-decoration { display: none; } }

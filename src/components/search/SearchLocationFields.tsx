@@ -19,12 +19,15 @@ export function SearchLocationFields({
   children?: ReactNode;
 }) {
   return (
-    <div className="grid gap-5 border-t border-border/70 pt-5 md:grid-cols-[2fr_1fr]">
-      <PlaceSelector value={place} onChange={onPlaceChange} errors={errors} />
-      <div className="space-y-4">
-        <PeriodSelect value={dias} onChange={onDaysChange} />
-        {children}
+    <section className="border-t border-border/70 pt-5" aria-label="Local e período da pesquisa">
+      <h2 className="mb-3 text-base font-semibold">Onde pesquisar?</h2>
+      <div className="grid items-start gap-5 md:grid-cols-[2fr_1fr]">
+        <PlaceSelector value={place} onChange={onPlaceChange} errors={errors} hideHeading />
+        <div className="space-y-4">
+          <PeriodSelect value={dias} onChange={onDaysChange} />
+          {children}
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

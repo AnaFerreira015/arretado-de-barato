@@ -27,10 +27,12 @@ export function PlaceSelector({
   value,
   onChange,
   errors,
+  hideHeading = false,
 }: {
   value: PlaceState;
   onChange: (v: PlaceState) => void;
   errors: FieldErrors;
+  hideHeading?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [geoStatus, setGeoStatus] = useState<"idle" | "loading" | "denied" | "error">("idle");
@@ -66,7 +68,7 @@ export function PlaceSelector({
 
   return (
     <fieldset className="space-y-3">
-      <legend className="mb-1 text-base font-semibold">Onde pesquisar?</legend>
+      <legend className={hideHeading ? "sr-only" : "mb-1 text-base font-semibold"}>Onde pesquisar?</legend>
 
       {value.mode === "geo" && value.coords ? (
         <div className="rounded-lg border-2 border-primary bg-primary-soft p-3">
@@ -112,7 +114,7 @@ export function PlaceSelector({
                 aria-labelledby={ids.label}
                 aria-describedby={munErr ? ids.err : undefined}
                 aria-invalid={!!munErr}
-                className={cn("w-full justify-between font-normal", munErr && "border-destructive")}
+                className={cn("w-full justify-between border-input font-normal", munErr && "border-destructive")}
               >
                 <span className="flex items-center gap-2 truncate">
                   <MapPin aria-hidden />
