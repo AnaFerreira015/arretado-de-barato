@@ -4,6 +4,9 @@ import type { ReactNode } from "react";
 import { compareStore } from "@/lib/store";
 import { searchMode } from "@/lib/economiza/searchMode";
 
+import { InstallApp } from "@/components/pwa/InstallApp";
+import { PwaStatus } from "@/components/pwa/PwaStatus";
+
 const NAV = [
   { to: "/", label: "Buscar", icon: Search },
   { to: "/assistente", label: "Por voz", icon: Mic },
@@ -89,6 +92,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         tabIndex={-1}
         className="mx-auto w-full max-w-6xl flex-1 px-4 pb-28 pt-6 outline-none sm:pt-8 lg:pb-12"
       >
+        <PwaStatus />
         {children}
       </main>
       <footer className="border-t bg-card pb-24 lg:pb-0">
@@ -99,6 +103,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             aplicativo oficial do governo.
           </p>
         </div>
+        <InstallApp />
       </footer>
       <nav
         aria-label="Navegação inferior"
