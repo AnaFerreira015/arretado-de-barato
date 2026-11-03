@@ -5,8 +5,8 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Arretado de Barato design system. All colors in oklch.
- * Petroleum green, mango accents and a warm cream canvas.
+ * Arretado de Barato design system.
+ * Azul do litoral, terracota do artesanato e areia em uma base clara.
  */
 
 @theme inline {
@@ -17,7 +17,7 @@
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
   --radius-2xl: calc(var(--radius) + 8px);
-  --color-mango: var(--mango);
+  --color-sand: var(--sand);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -51,35 +51,39 @@
 
 :root {
   --radius: 1rem;
-  --mango: #F7C548;
-  --background: #FAF8F0;
-  --foreground: #183B38;
+  --sand: #F1D9BC;
+  --background: #FAF7F2;
+  --foreground: #253744;
   --card: #FFFFFF;
-  --card-foreground: #183B38;
+  --card-foreground: #253744;
   --popover: #FFFFFF;
-  --popover-foreground: #183B38;
-  --primary: #14645C;
+  --popover-foreground: #253744;
+  --primary: #234F6B;
   --primary-foreground: #FFFFFF;
-  --primary-soft: #E5F3EC;
-  --secondary: #F3EBD7;
-  --secondary-foreground: #183B38;
-  --muted: #F0F2EB;
-  --muted-foreground: #52665F;
-  --accent: #E5F3EC;
-  --accent-foreground: #164D43;
+  --primary-soft: #EAF1F5;
+  --secondary: #F3E6DA;
+  --secondary-foreground: #253744;
+  --muted: #F1EEEA;
+  --muted-foreground: #586570;
+  --accent: #EAF1F5;
+  --accent-foreground: #234F6B;
   --destructive: oklch(0.5 0.19 27);
   --destructive-foreground: oklch(0.99 0 0);
-  --warning: oklch(0.6 0.13 70);
-  --warning-soft: oklch(0.96 0.045 85);
-  --warning-foreground: oklch(0.36 0.08 60);
+  --warning: #A24D34;
+  --warning-soft: #F8E9DF;
+  --warning-foreground: #733B28;
   --info-soft: oklch(0.95 0.025 240);
   --info-foreground: oklch(0.33 0.07 245);
-  --price: #12584F;
-  --border: #D6E1D9;
-  --input: #78938A;
-  --ring: #9E4C00;
-  --shadow-soft: 0 1px 2px oklch(0.2 0.02 165 / 0.08);
-  --shadow-card: 0 1px 2px oklch(0.2 0.02 165 / 0.06), 0 4px 14px -6px oklch(0.2 0.02 165 / 0.12);
+  --price: #93462F;
+  --border: #DCD8D1;
+  --input: #7D898F;
+  --ring: #A24D34;
+  --terracotta: #A24D34;
+  --terracotta-hover: #873D29;
+  --hero-start: #234F6B;
+  --hero-end: #193B50;
+  --shadow-soft: 0 1px 2px oklch(0.2 0.02 240 / 0.08);
+  --shadow-card: 0 1px 2px oklch(0.2 0.02 240 / 0.06), 0 4px 14px -6px oklch(0.2 0.02 240 / 0.12);
 }
 
 @layer base {
@@ -146,7 +150,7 @@
 /* Shared identity: one visual language for search, lists and the assistant. */
 .search-hero {
   color: #fff;
-  background: radial-gradient(ellipse at top right, #237C68 0, transparent 62%), #104D49;
+  background: radial-gradient(ellipse at top right, var(--hero-start) 0, transparent 62%), var(--hero-end);
 }
 .hero-decoration {
   position: absolute;
@@ -158,6 +162,6 @@
   transform: rotate(-12deg);
   pointer-events: none;
 }
-.voice-cta { background: var(--mango); color: #183B38; font-weight: 600; box-shadow: 0 3px 0 #D9A527; }
-.voice-cta:hover { background: #FFD66B; }
+.voice-cta { background: var(--terracotta); color: #FFFFFF; font-weight: 600; box-shadow: 0 3px 0 var(--terracotta-hover); }
+.voice-cta:hover { background: var(--terracotta-hover); }
 @media (max-width: 639px) { .hero-decoration { display: none; } }

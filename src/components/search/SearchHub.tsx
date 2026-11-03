@@ -23,7 +23,7 @@ export function SearchHub({
           <h1 className="text-3xl font-extrabold leading-tight sm:text-5xl">
             Preço arretado.
             <br />
-            <span className="text-mango">Escolha mais esperta.</span>
+            <span className="text-sand">Escolha mais esperta.</span>
           </h1>
           <p className="max-w-lg text-base text-white/90 sm:text-lg">
             Produtos e combustíveis, em uma só busca. Compare preços registrados perto de você.
