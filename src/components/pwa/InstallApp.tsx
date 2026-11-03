@@ -9,12 +9,19 @@ type InstallPrompt = Event & {
 export function InstallApp() {
   const [prompt, setPrompt] = useState<InstallPrompt | null>(null);
   const [installed, setInstalled] = useState(false);
+  const [appleDevice, setAppleDevice] = useState<"iPhone" | "iPad" | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [showInstructions, setShowInstructions] = useState(false);
   const instructionsId = useId();
 
   useEffect(() => {
+    const ua = navigator.userAgent;
+    if (/iPad/i.test(ua) || (/Macintosh/i.test(ua) && navigator.maxTouchPoints > 1)) {
+      setAppleDevice("iPad");
+    } else if (/iPhone|iPod/i.test(ua)) {
+      setAppleDevice("iPhone");
+    }
     const mode = window.matchMedia("(display-mode: standalone)");
     const syncMode = () =>
       setInstalled(
@@ -90,7 +97,13 @@ export function InstallApp() {
             className="inline-flex min-h-12 w-full shrink-0 cursor-pointer items-center justify-center gap-2 rounded-xl bg-primary px-5 font-bold text-primary-foreground shadow-soft hover:bg-primary/90 disabled:cursor-wait disabled:opacity-60 sm:w-auto"
           >
             <Download aria-hidden className="size-5" />
-            {busy ? "Abrindo instalação…" : "Instalar app grátis"}
+            {busy
+              ? "Abrindo instalação…"
+              : prompt
+                ? "Instalar app grátis"
+                : appleDevice
+                  ? `Como instalar no ${appleDevice}`
+                  : "Como instalar o app"}
           </button>
         </div>
         <p role="status" className={message ? "mt-3" : undefined}>
@@ -106,13 +119,25 @@ export function InstallApp() {
             Como instalar no celular ou computador
           </summary>
           <div className="space-y-2 pb-2">
+            {appleDevice && (
+              <div className="rounded-xl bg-card p-3 text-foreground">
+                <p className="font-semibold">No Chrome do {appleDevice}</p>
+                <ol className="mt-2 list-decimal space-y-1 pl-5">
+                  <li>Toque em Compartilhar, ao lado da barra de endereço do Chrome.</li>
+                  <li>Selecione “Adicionar à Tela de Início”.</li>
+                  <li>Confirme em “Adicionar”.</li>
+                </ol>
+                <p className="mt-2">O iOS exige esses passos no navegador para instalar o app.</p>
+              </div>
+            )}
             <p>
               No Android ou computador, abra o menu do navegador e procure “Instalar aplicativo” ou
               “Adicionar à tela inicial”, se disponível.
             </p>
             <p>
-              No iPhone ou iPad, abra o site no Safari, toque em Compartilhar e em “Adicionar à Tela
-              de Início”. Se aparecer “Abrir como App”, deixe ativado.
+              No iPhone ou iPad, use o Chrome ou Safari: toque no ícone Compartilhar do navegador,
+              escolha “Adicionar à Tela de Início” e confirme em “Adicionar”. Se aparecer “Abrir
+              como App”, deixe ativado.
             </p>
             <p>
               Se estiver dentro de outro aplicativo, abra o link no navegador. As consultas de

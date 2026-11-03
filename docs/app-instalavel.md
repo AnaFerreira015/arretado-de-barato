@@ -6,8 +6,8 @@ O site agora inclui manifesto, ícones PNG para Android/iOS, convite de instala�
 
 1. Aplique o patch e envie os commits para o repositório usado no deploy.
 2. Publique normalmente na Cloudflare e abra o endereço HTTPS definitivo.
-3. Use **Instalar app grátis**, abaixo do cabeçalho. Quando o navegador oferece instalação direta, o botão abre o convite; nos demais casos, expande as instruções para adicionar à tela inicial.
-4. No Android/desktop, procure Instalar aplicativo ou Adicionar à tela inicial no menu do navegador. No iPhone/iPad, abra no Safari e use Compartilhar > Adicionar à Tela de Início; habilite Abrir como App se essa opção aparecer.
+3. Abaixo do cabeçalho, o botão mostra **Instalar app grátis** quando há convite nativo, **Como instalar no iPhone/iPad** nesses aparelhos e **Como instalar o app** nos demais casos. Quando o navegador oferece instalação direta, o botão abre o convite; nos demais casos, expande as instruções para adicionar à tela inicial.
+4. No Android/desktop, procure Instalar aplicativo ou Adicionar à tela inicial no menu do navegador. No iPhone/iPad, use Chrome ou Safari: Compartilhar > Adicionar à Tela de Início > Adicionar; habilite Abrir como App se essa opção aparecer.
 
 O botão aparece mesmo sem convite automático do navegador e é ocultado na janela instalada. Não indica publicação na Play Store ou App Store. Em navegadores embutidos (por exemplo, dentro de redes sociais), abra o endereço no navegador externo. O app abre em janela própria nos ambientes que suportam standalone. A tela inicial de abertura é definida pelo sistema a partir do manifesto e dos ícones; não é uma tela personalizada universal.
 

@@ -27,7 +27,7 @@ function offer(outcome: "accepted" | "dismissed" = "dismissed", fail = false) {
 }
 it("oferece instruções manuais sem prometer suporte", () => {
   render(<InstallApp />);
-  const button = screen.getByRole("button", { name: "Instalar app grátis" });
+  const button = screen.getByRole("button", { name: "Como instalar o app" });
   expect(button).toBeVisible();
   expect(button).toHaveAttribute("aria-expanded", "false");
   fireEvent.click(button);
@@ -84,4 +84,23 @@ it("avisa perda de conexão e remove aviso ao reconectar", () => {
     window.dispatchEvent(new Event("online"));
   });
   expect(screen.getByRole("status")).toBeEmptyDOMElement();
+});
+
+it("orienta instalação pelo Chrome no iPhone sem prometer instalação automática", () => {
+  vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
+    "Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) CriOS/142 Mobile Safari/604.1",
+  );
+  render(<InstallApp />);
+  fireEvent.click(screen.getByRole("button", { name: "Como instalar no iPhone" }));
+  expect(screen.getByText("No Chrome do iPhone")).toBeVisible();
+  expect(screen.getByText(/O iOS exige esses passos/)).toBeVisible();
+});
+it("reconhece iPad em modo desktop", () => {
+  vi.spyOn(navigator, "userAgent", "get").mockReturnValue(
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X) Safari",
+  );
+  Object.defineProperty(navigator, "maxTouchPoints", { configurable: true, get: () => 5 });
+  render(<InstallApp />);
+  expect(screen.getByRole("button", { name: "Como instalar no iPad" })).toBeVisible();
+  Reflect.deleteProperty(navigator, "maxTouchPoints");
 });
