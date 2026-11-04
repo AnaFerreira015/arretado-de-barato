@@ -32,15 +32,20 @@ function setup() {
   const callbacks = { onText: vi.fn(), onError: vi.fn(), onState: vi.fn() };
   return { controller: createSpeechController(callbacks), synth, callbacks };
 }
-afterEach(() => vi.unstubAllGlobals());
-it("escuta pontual pt-BR e cancela fala antes de gravar", () => {
+afterEach(() => {
+  vi.unstubAllGlobals();
+  vi.useRealTimers();
+});
+it("escuta contínua pt-BR e cancela fala antes de gravar", () => {
   const { controller, synth, callbacks } = setup();
   controller.listen();
   expect(Recognition.latest.lang).toBe("pt-BR");
-  expect(Recognition.latest.continuous).toBe(false);
-  expect(Recognition.latest.interimResults).toBe(false);
+  expect(Recognition.latest.continuous).toBe(true);
+  expect(Recognition.latest.interimResults).toBe(true);
   expect(synth.cancel).toHaveBeenCalled();
   Recognition.latest.onresult?.({ results: [[{ transcript: "arroz" }]] });
+  expect(callbacks.onText).not.toHaveBeenCalled();
+  controller.finish();
   expect(callbacks.onText).toHaveBeenCalledWith("arroz");
 });
 it("interrompe microfone ao falar e ignora callbacks antigos", () => {
@@ -70,4 +75,40 @@ it("permite texto quando microfone é negado ou não existe", () => {
   vi.stubGlobal("SpeechRecognition", undefined);
   vi.stubGlobal("webkitSpeechRecognition", undefined);
   expect(createSpeechController(callbacks).canListen).toBe(false);
+});
+
+it("mantém fala acima de cinco segundos e reúne trechos após pausa sem enviar antes de terminar", () => {
+  vi.useFakeTimers();
+  const { controller, callbacks } = setup();
+  controller.listen();
+  Recognition.latest.onresult?.({ results: [[{ transcript: "quero leite" }]] });
+  Recognition.latest.onend?.();
+  vi.advanceTimersByTime(6000);
+  Recognition.latest.onresult?.({ results: [[{ transcript: "de um litro em Maceió" }]] });
+  expect(callbacks.onText).not.toHaveBeenCalled();
+  controller.finish();
+  expect(callbacks.onText).toHaveBeenCalledExactlyOnceWith("quero leite de um litro em Maceió");
+});
+it("cancelar durante pausa impede reinício e envio tardio", () => {
+  vi.useFakeTimers();
+  const { controller, callbacks } = setup();
+  controller.listen();
+  const first = Recognition.latest;
+  first.onresult?.({ results: [[{ transcript: "arroz" }]] });
+  first.onend?.();
+  controller.stop();
+  vi.advanceTimersByTime(1000);
+  expect(Recognition.latest).toBe(first);
+  expect(callbacks.onText).not.toHaveBeenCalled();
+});
+it("aguarda resultado final do navegador ao enviar áudio", () => {
+  const { controller, callbacks } = setup();
+  controller.listen();
+  const rec = Recognition.latest as Recognition & { stop?: () => void };
+  rec.stop = vi.fn();
+  controller.finish();
+  expect(callbacks.onText).not.toHaveBeenCalled();
+  rec.onresult?.({ results: [[{ transcript: "gasolina em Maceió" }]] });
+  rec.onend?.();
+  expect(callbacks.onText).toHaveBeenCalledExactlyOnceWith("gasolina em Maceió");
 });

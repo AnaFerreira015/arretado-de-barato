@@ -8,9 +8,11 @@ export type RecognitionLike = {
   onend: (() => void) | null;
   start(): void;
   abort(): void;
+  stop?(): void;
 };
 type Callbacks = {
   onText(text: string): void;
+  onDraft?(text: string): void;
   onError(message: string): void;
   onState(state: AudioState): void;
 };
@@ -25,8 +27,16 @@ export function createSpeechController(callbacks: Callbacks) {
   let recognition: RecognitionLike | null = null;
   let generation = 0;
   let disposed = false;
+  let recording = false;
+  let finishing = false;
+  let saved = "";
+  let partial = "";
+  let restart: ReturnType<typeof setTimeout> | undefined;
   function stop() {
     generation++;
+    recording = false;
+    finishing = false;
+    clearTimeout(restart);
     if (recognition) {
       recognition.onend = null;
       recognition.onresult = null;
@@ -41,6 +51,12 @@ export function createSpeechController(callbacks: Callbacks) {
     synth?.cancel();
     if (!disposed) callbacks.onState("idle");
   }
+  function deliver() {
+    const text = [saved, partial].filter(Boolean).join(" ").trim();
+    stop();
+    if (text) callbacks.onText(text);
+    else callbacks.onError("Não entendi a fala. Tente novamente ou digite.");
+  }
   function listen() {
     if (disposed) return;
     stop();
@@ -48,37 +64,68 @@ export function createSpeechController(callbacks: Callbacks) {
       callbacks.onError("Este navegador não oferece reconhecimento de voz. Continue digitando.");
       return;
     }
+    saved = "";
+    partial = "";
+    recording = true;
+    callbacks.onDraft?.("");
     const id = generation;
-    try {
-      recognition = new Recognition();
-      recognition.lang = "pt-BR";
-      recognition.continuous = false;
-      recognition.interimResults = false;
-      recognition.onresult = (event) => {
-        if (disposed || generation !== id) return;
-        const text = event.results[0]?.[0]?.transcript.trim();
+    function startSegment() {
+      if (disposed || generation !== id || !recording) return;
+      try {
+        const segment = new Recognition!();
+        recognition = segment;
+        recognition.lang = "pt-BR";
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.onresult = (event) => {
+          if (disposed || generation !== id || recognition !== segment) return;
+          partial = Array.from(event.results)
+            .map((r) => r[0]?.transcript.trim() ?? "")
+            .filter(Boolean)
+            .join(" ");
+          callbacks.onDraft?.([saved, partial].filter(Boolean).join(" "));
+        };
+        recognition.onerror = (event) => {
+          if (disposed || generation !== id || recognition !== segment) return;
+          if (event.error === "no-speech" && recording && !finishing) return;
+          stop();
+          callbacks.onError(
+            event.error === "not-allowed" || event.error === "service-not-allowed"
+              ? "Permissão de microfone negada. Continue digitando."
+              : "A gravação foi interrompida pelo navegador. Confira o texto e tente novamente ou digite.",
+          );
+        };
+        recognition.onend = () => {
+          if (disposed || generation !== id || recognition !== segment) return;
+          if (finishing) {
+            deliver();
+            return;
+          }
+          saved = [saved, partial].filter(Boolean).join(" ");
+          partial = "";
+          recognition = null;
+          if (recording) restart = setTimeout(startSegment, 250);
+        };
+        recognition.start();
+        callbacks.onState("listening");
+      } catch {
         stop();
-        if (text) callbacks.onText(text);
-        else callbacks.onError("Não entendi a fala. Tente novamente ou digite.");
-      };
-      recognition.onerror = (event) => {
-        if (disposed || generation !== id) return;
-        stop();
-        callbacks.onError(
-          event.error === "not-allowed" || event.error === "service-not-allowed"
-            ? "Permissão de microfone negada. Continue digitando."
-            : "Não foi possível reconhecer a fala. Tente novamente ou digite.",
-        );
-      };
-      recognition.onend = () => {
-        if (!disposed && generation === id) stop();
-      };
-      recognition.start();
-      callbacks.onState("listening");
-    } catch {
-      stop();
-      callbacks.onError("Não foi possível iniciar o microfone. Continue digitando.");
+        callbacks.onError("Não foi possível continuar o microfone. Confira o texto ou digite.");
+      }
     }
+    startSegment();
+  }
+  function finish() {
+    if (!recording || disposed || finishing) return;
+    finishing = true;
+    clearTimeout(restart);
+    if (recognition?.stop) {
+      try {
+        recognition.stop();
+      } catch {
+        deliver();
+      }
+    } else deliver();
   }
   function speak(text: string) {
     if (disposed) return;
@@ -113,6 +160,7 @@ export function createSpeechController(callbacks: Callbacks) {
     canListen: !!Recognition,
     canSpeak: !!synth && !!host.SpeechSynthesisUtterance,
     listen,
+    finish,
     speak,
     stop,
     dispose() {

@@ -68,6 +68,7 @@ const defaults: Services = {
 };
 type Confirmed = { query: ProductQuery | FuelQuery; intent: Draft; demo: boolean };
 type State = {
+  messages: { role: "assistant" | "user"; text: string }[];
   draft: Draft;
   stage: Stage;
   busy: "search" | "more" | "ai" | "location" | null;
@@ -89,6 +90,12 @@ type State = {
   resultDemo: boolean;
 };
 const initial = (mode: SearchMode): State => ({
+  messages: [
+    {
+      role: "assistant",
+      text: "Olá! O que você quer encontrar e em qual município? Pode falar ou escrever do seu jeito.",
+    },
+  ],
   draft: newDraft(mode),
   stage: mode === "combustivel" ? "fuel" : "product",
   busy: null,
@@ -125,7 +132,16 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
   }
   function announce(message: string, error = false) {
     narration.current = message;
-    update({ message, error: error ? message : null });
+    const messages = current.current.messages;
+    const last = messages.at(-1);
+    update({
+      message,
+      error: error ? message : null,
+      messages:
+        last?.role === "assistant" && last.text === message
+          ? messages
+          : ([...messages, { role: "assistant", text: message }].slice(-60) as State["messages"]),
+    });
     if (current.current.spoken) speech.current?.speak(message);
   }
   function advance(stage: Stage, draft = current.current.draft) {
@@ -153,6 +169,9 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
   }
   useEffect(() => {
     const controller = createSpeechController({
+      onDraft(text) {
+        update({ transcript: text });
+      },
       onText(text) {
         void answerRef.current(text);
       },
@@ -160,7 +179,13 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
         update({ audio });
       },
       onError(message) {
-        update({ message, error: message });
+        update({
+          message,
+          error: message,
+          messages: [...current.current.messages, { role: "assistant", text: message }].slice(
+            -60,
+          ) as State["messages"],
+        });
       },
     });
     speech.current = controller;
@@ -449,7 +474,12 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
   async function answer(text: string) {
     const value = text.trim();
     if (!value) return;
-    update({ transcript: value });
+    update({
+      transcript: value,
+      messages: [...current.current.messages, { role: "user", text: value }].slice(
+        -60,
+      ) as State["messages"],
+    });
     const command = parseCommand(value);
     if (value.length > 500) {
       announce("Use até 500 caracteres por pedido.", true);
@@ -669,6 +699,9 @@ export function useVoiceAssistant(overrides: Partial<Services> = {}, mode: Searc
     requestLocation,
     setMode,
     stop,
+    finishRecording() {
+      speech.current?.finish();
+    },
     listen() {
       if (!current.current.busy) speech.current?.listen();
     },
