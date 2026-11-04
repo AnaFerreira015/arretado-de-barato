@@ -12,6 +12,7 @@ import { type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { AppShell } from "@/components/eal/AppShell";
+import { VoiceChatProvider } from "@/components/voice/VoiceChat";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {
@@ -129,9 +130,11 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
-      <AppShell>
-        <Outlet />
-      </AppShell>
+      <VoiceChatProvider>
+        <AppShell>
+          <Outlet />
+        </AppShell>
+      </VoiceChatProvider>
       <Toaster position="top-center" richColors closeButton />
     </QueryClientProvider>
   );

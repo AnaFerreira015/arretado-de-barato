@@ -1,20 +1,23 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import { GitCompareArrows, Heart, Info, ListChecks, Search, Mic } from "lucide-react";
+import { GitCompareArrows, Heart, Info, ListChecks, Search, Mic, LayoutGrid } from "lucide-react";
 import type { ReactNode } from "react";
 import { compareStore } from "@/lib/store";
 import { searchMode } from "@/lib/economiza/searchMode";
 
+import { useVoiceChat } from "@/components/voice/voiceChatContext";
 import { InstallApp } from "@/components/pwa/InstallApp";
 import { PwaStatus } from "@/components/pwa/PwaStatus";
 
 const NAV = [
   { to: "/", label: "Buscar", icon: Search },
+  { to: "/categorias", label: "Categorias", icon: LayoutGrid },
   { to: "/assistente", label: "Por voz", icon: Mic },
   { to: "/lista", label: "Minha lista", icon: ListChecks },
   { to: "/favoritos", label: "Favoritos", icon: Heart },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const openChat = useVoiceChat();
   const compareCount = compareStore.use().length;
   const location = useRouterState({ select: (state) => state.location });
   const query = location.search as Record<string, unknown>;
@@ -50,15 +53,27 @@ export function AppShell({ children }: { children: ReactNode }) {
             <ul className="flex gap-1">
               {NAV.map((n) => (
                 <li key={n.to}>
-                  <Link
-                    to={n.to}
-                    search={n.to === "/assistente" ? { modo: mode } : {}}
-                    activeOptions={{ exact: n.to === "/", includeSearch: false }}
-                    className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 font-semibold text-muted-foreground hover:bg-accent data-[status=active]:bg-primary data-[status=active]:text-primary-foreground"
-                  >
-                    <n.icon aria-hidden className="size-5" />
-                    {n.label}
-                  </Link>
+                  {n.to === "/assistente" ? (
+                    <button
+                      type="button"
+                      onClick={() => openChat(mode)}
+                      aria-haspopup="dialog"
+                      className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-xl px-3 font-semibold text-muted-foreground hover:bg-accent"
+                    >
+                      <Mic aria-hidden className="size-5" />
+                      Por voz
+                    </button>
+                  ) : (
+                    <Link
+                      to={n.to}
+                      search={{}}
+                      activeOptions={{ exact: n.to === "/", includeSearch: false }}
+                      className="inline-flex min-h-11 items-center gap-2 rounded-xl px-3 font-semibold text-muted-foreground hover:bg-accent data-[status=active]:bg-primary data-[status=active]:text-primary-foreground"
+                    >
+                      <n.icon aria-hidden className="size-5" />
+                      {n.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -87,7 +102,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           </div>
         </div>
       </header>
-      <InstallApp />
       <main
         id="conteudo"
         tabIndex={-1}
@@ -104,37 +118,57 @@ export function AppShell({ children }: { children: ReactNode }) {
             aplicativo oficial do governo.
           </p>
         </div>
+        <details className="mx-auto max-w-6xl px-4 pb-5">
+          <summary className="min-h-11 cursor-pointer py-2 font-semibold text-primary">
+            Instalar aplicativo
+          </summary>
+          <InstallApp />
+        </details>
       </footer>
       <nav
         aria-label="Navegação inferior"
         className="fixed inset-x-0 bottom-0 z-30 border-t bg-card pb-[env(safe-area-inset-bottom)] lg:hidden"
       >
-        <ul className="mx-auto grid max-w-xl grid-cols-4">
+        <ul className="mx-auto grid max-w-xl grid-cols-5">
           {NAV.map((n) => (
             <li key={n.to}>
-              <Link
-                to={n.to}
-                search={n.to === "/assistente" ? { modo: mode } : {}}
-                activeOptions={{ exact: n.to === "/", includeSearch: false }}
-                className="flex min-h-20 flex-col items-center justify-center gap-1 text-xs font-semibold text-muted-foreground data-[status=active]:text-primary"
-              >
-                {({ isActive }) => (
-                  <>
-                    <span
-                      className={
-                        isActive
-                          ? "grid h-9 w-14 place-items-center rounded-xl bg-primary text-primary-foreground"
-                          : "grid h-9 w-14 place-items-center rounded-xl"
-                      }
-                    >
-                      <n.icon aria-hidden className="size-6" strokeWidth={isActive ? 2.6 : 2} />
-                    </span>
-                    <span className={isActive ? "underline underline-offset-4" : undefined}>
-                      {n.label}
-                    </span>
-                  </>
-                )}
-              </Link>
+              {n.to === "/assistente" ? (
+                <button
+                  type="button"
+                  onClick={() => openChat(mode)}
+                  aria-haspopup="dialog"
+                  className="flex min-h-20 w-full cursor-pointer flex-col items-center justify-center gap-1 text-xs font-semibold text-muted-foreground"
+                >
+                  <span className="grid h-9 w-14 place-items-center">
+                    <Mic aria-hidden className="size-6" />
+                  </span>
+                  Por voz
+                </button>
+              ) : (
+                <Link
+                  to={n.to}
+                  search={{}}
+                  activeOptions={{ exact: n.to === "/", includeSearch: false }}
+                  className="flex min-h-20 flex-col items-center justify-center gap-1 text-xs font-semibold text-muted-foreground data-[status=active]:text-primary"
+                >
+                  {({ isActive }) => (
+                    <>
+                      <span
+                        className={
+                          isActive
+                            ? "grid h-9 w-14 place-items-center rounded-xl bg-primary text-primary-foreground"
+                            : "grid h-9 w-14 place-items-center rounded-xl"
+                        }
+                      >
+                        <n.icon aria-hidden className="size-6" strokeWidth={isActive ? 2.6 : 2} />
+                      </span>
+                      <span className={isActive ? "underline underline-offset-4" : undefined}>
+                        {n.label}
+                      </span>
+                    </>
+                  )}
+                </Link>
+              )}
             </li>
           ))}
         </ul>

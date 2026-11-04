@@ -37,7 +37,7 @@ it("mostra somente o formulário selecionado e destaca voz", () => {
   const view = render(<SearchHub mode="produto" onModeChange={change} />);
   expect(screen.getByText("Formulário de produtos")).toBeVisible();
   expect(screen.queryByText("Formulário de combustíveis")).not.toBeInTheDocument();
-  expect(screen.getByRole("link", { name: /buscar por voz/i })).toBeVisible();
+  expect(screen.getByRole("button", { name: /buscar por voz/i })).toBeVisible();
   fireEvent.click(screen.getByRole("radio", { name: "Combustíveis" }));
   expect(change).toHaveBeenCalledWith("combustivel");
   view.rerender(<SearchHub mode="combustivel" onModeChange={change} />);

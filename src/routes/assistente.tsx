@@ -1,5 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { VoiceAssistant } from "@/components/voice/VoiceAssistant";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { useVoiceChat } from "@/components/voice/voiceChatContext";
 
 export const Route = createFileRoute("/assistente")({
   validateSearch: (search: Record<string, unknown>): { modo?: "combustivel" | "produto" } => ({
@@ -18,20 +19,13 @@ export const Route = createFileRoute("/assistente")({
 });
 function AssistantPage() {
   const { modo } = Route.useSearch();
-  return (
-    <div className="space-y-4">
-      <Link
-        to="/"
-        search={{ tipo: modo ?? "produto" }}
-        className="inline-flex min-h-11 items-center rounded-md font-semibold text-primary underline"
-      >
-        Voltar à busca de {modo === "combustivel" ? "combustíveis" : "produtos"}
-      </Link>
-      <h1 className="text-2xl font-extrabold md:text-3xl">Assistente de voz</h1>
-      <p className="text-muted-foreground">
-        Encontre preços com orientação a cada passo, no seu ritmo.
-      </p>
-      <VoiceAssistant key={modo} initialMode={modo ?? "produto"} />
-    </div>
-  );
+  const openChat = useVoiceChat();
+  const navigate = useNavigate();
+  useEffect(() => {
+    openChat(modo ?? "produto");
+    void navigate({ to: "/", search: { tipo: modo ?? "produto" }, replace: true });
+    // Compatibilidade com links antigos: abre o chat uma vez e volta à busca.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  return null;
 }

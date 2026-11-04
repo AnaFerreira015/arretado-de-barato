@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AssistenteRouteImport } from './routes/assistente'
+import { Route as CategoriasRouteImport } from './routes/categorias'
 import { Route as CombustiveisRouteImport } from './routes/combustiveis'
 import { Route as CompararRouteImport } from './routes/comparar'
 import { Route as FavoritosRouteImport } from './routes/favoritos'
@@ -25,6 +26,11 @@ const IndexRoute = IndexRouteImport.update({
 const AssistenteRoute = AssistenteRouteImport.update({
   id: '/assistente',
   path: '/assistente',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CategoriasRoute = CategoriasRouteImport.update({
+  id: '/categorias',
+  path: '/categorias',
   getParentRoute: () => rootRouteImport,
 } as any)
 const CombustiveisRoute = CombustiveisRouteImport.update({
@@ -56,6 +62,7 @@ const SobreRoute = SobreRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/assistente': typeof AssistenteRoute
+  '/categorias': typeof CategoriasRoute
   '/combustiveis': typeof CombustiveisRoute
   '/comparar': typeof CompararRoute
   '/favoritos': typeof FavoritosRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/assistente': typeof AssistenteRoute
+  '/categorias': typeof CategoriasRoute
   '/combustiveis': typeof CombustiveisRoute
   '/comparar': typeof CompararRoute
   '/favoritos': typeof FavoritosRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/assistente': typeof AssistenteRoute
+  '/categorias': typeof CategoriasRoute
   '/combustiveis': typeof CombustiveisRoute
   '/comparar': typeof CompararRoute
   '/favoritos': typeof FavoritosRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/assistente'
+    | '/categorias'
     | '/combustiveis'
     | '/comparar'
     | '/favoritos'
@@ -95,6 +105,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/assistente'
+    | '/categorias'
     | '/combustiveis'
     | '/comparar'
     | '/favoritos'
@@ -104,6 +115,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/assistente'
+    | '/categorias'
     | '/combustiveis'
     | '/comparar'
     | '/favoritos'
@@ -114,6 +126,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AssistenteRoute: typeof AssistenteRoute
+  CategoriasRoute: typeof CategoriasRoute
   CombustiveisRoute: typeof CombustiveisRoute
   CompararRoute: typeof CompararRoute
   FavoritosRoute: typeof FavoritosRoute
@@ -135,6 +148,13 @@ declare module '@tanstack/react-router' {
       path: '/assistente'
       fullPath: '/assistente'
       preLoaderRoute: typeof AssistenteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/categorias': {
+      id: '/categorias'
+      path: '/categorias'
+      fullPath: '/categorias'
+      preLoaderRoute: typeof CategoriasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/combustiveis': {
@@ -178,6 +198,7 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AssistenteRoute: AssistenteRoute,
+  CategoriasRoute: CategoriasRoute,
   CombustiveisRoute: CombustiveisRoute,
   CompararRoute: CompararRoute,
   FavoritosRoute: FavoritosRoute,
