@@ -69,7 +69,7 @@ export function demoProducts(body: ProductBody, now = Date.now()) {
         descricaoSefaz: sameGtin ? `${termo} EXEMPLO 1 KG` : "",
         gtin: sameGtin ? gtin : i === 7 ? "" : `0${String(hash(termo + "x" + i)).slice(0, 12).padStart(12, "1")}`,
         ncm: "10063021",
-        gpc: "50000000",
+        gpc: body.produto.gpc ?? "50000000",
         unidadeMedida: "UN",
         venda: {
           dataVenda: new Date(now - (i * 7 + 2) * 3_600_000).toISOString().replace(/\.\d{3}Z$/, "Z"),
