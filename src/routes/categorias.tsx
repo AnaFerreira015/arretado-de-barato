@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { ArrowLeft, Package } from "lucide-react";
 import { GPC_SEGMENTS } from "@/lib/economiza/constants";
 import { productFormStore, productSearchStore } from "@/lib/economiza/searchStores";
-import { ProductSearchPanel } from "@/components/search/ProductSearchPanel";
+import { CategoryProducts } from "@/components/categories/CategoryProducts";
 
 export const Route = createFileRoute("/categorias")({
   head: () => ({ meta: [{ title: "Categorias — Arretado de Barato" }] }),
@@ -41,7 +41,7 @@ export function CategoriesPage() {
         <h1 className="text-2xl font-extrabold">{category?.nome ?? "Explore por categoria"}</h1>
         <p className="mt-1 text-muted-foreground">
           {category
-            ? "Digite o produto para buscar dentro desta categoria."
+            ? "Veja produtos e preços registrados nesta categoria."
             : "Escolha o que você procura para refinar sua pesquisa."}
         </p>
       </header>
@@ -55,7 +55,7 @@ export function CategoriesPage() {
             <ArrowLeft aria-hidden className="size-5" />
             Todas as categorias
           </button>
-          <ProductSearchPanel key={category.codigo} />
+          <CategoryProducts key={category.codigo} category={category.codigo} />
         </>
       ) : (
         <>

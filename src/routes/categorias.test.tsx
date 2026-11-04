@@ -2,8 +2,8 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { CategoriesPage } from "./categorias";
 import { productFormStore, productSearchStore } from "@/lib/economiza/searchStores";
-vi.mock("@/components/search/ProductSearchPanel", () => ({
-  ProductSearchPanel: () => <div>Pesquisa dentro da categoria</div>,
+vi.mock("@/components/categories/CategoryProducts", () => ({
+  CategoryProducts: () => <div>Pesquisa dentro da categoria</div>,
 }));
 afterEach(() => {
   cleanup();
