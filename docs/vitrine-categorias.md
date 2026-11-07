@@ -43,6 +43,13 @@ Referências de NCM: capítulo 01 (Animais vivos) em https://www.ibama.gov.br/co
 
 A grade passou a depender de uma verificação de produtos para o local, período e modo de dados atuais. Categorias sem registros confirmados não são exibidas. Uma falha na consulta é tratada como falha de verificação, sem afirmar que não há produtos.
 
-A API não tem um endpoint documentado de disponibilidade de todas as categorias. A descoberta começa com seis categorias comuns e permite Verificar mais categorias. Cada lote faz no máximo duas consultas simultâneas e tenta os três termos iniciais de cada segmento até encontrar um produto compatível. Não percorre todas as páginas da API para provar ausência: a grade representa categorias com produtos encontrados nas amostras verificadas. Uma categoria pode ter produtos fora dos termos ou páginas consultados e ainda não aparecer.
+A API não tem um endpoint documentado de disponibilidade de todas as categorias. A descoberta começa com doze categorias comuns e permite Verificar mais categorias. Cada lote faz no máximo quatro consultas simultâneas e tenta os três termos iniciais de cada segmento até encontrar um produto compatível. Não percorre todas as páginas da API para provar ausência: a grade representa categorias com produtos encontrados nas amostras verificadas. Uma categoria pode ter produtos fora dos termos ou páginas consultados e ainda não aparecer.
 
 Os produtos confirmados alimentam o mesmo cache da vitrine, de modo que clicar no cartão não repete a consulta inicial. O cache de disponibilidade também é separado por local, período e demonstração, com dois minutos de validade e cinco minutos sem uso antes da coleta. Mais categorias são verificadas somente por ação explícita, preservando o limite de requisições existente no proxy. Falhas são informadas e podem ser tentadas novamente.
+
+
+## Grade e descoberta progressiva
+
+Skeletons e categorias confirmadas agora são irmãos dentro da mesma grade, com as mesmas dimensões mínimas e espaçamento. Os skeletons são acrescentados após os cartões existentes. A grade usa duas colunas no celular, três em telas médias e até quatro no desktop. Os nomes oficiais são exibidos por inteiro, com quebra de linha inclusive em sequências longas sem espaços (barras/hífens), e os ícones ficam alinhados no topo dos cartões.
+
+A descoberta verifica até doze categorias por lote, com quatro consultas simultâneas. A primeira categoria confirmada pode ser exibida enquanto outras ainda estão pendentes, sem esperar a resposta do lote inteiro. Os produtos já são colocados no cache da vitrine nesse momento. Categorias existentes permanecem antes das novas durante a paginação. O teste de progressão mantém uma das fontes pendente e verifica que os cartões confirmados e os skeletons coexistem na mesma grade.

@@ -140,9 +140,10 @@ export function CategoriesPage({
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .toLowerCase();
-  const categories = GPC_SEGMENTS.filter(
-    (g) => availability.codes.has(g.codigo) && normalized(g.nome).includes(normalized(filter)),
-  );
+  const categories = Array.from(availability.codes).flatMap((code) => {
+    const item = GPC_SEGMENTS.find((g) => g.codigo === code);
+    return item && normalized(item.nome).includes(normalized(filter)) ? [item] : [];
+  });
   return (
     <div className="space-y-5">
       <header>
@@ -203,20 +204,6 @@ export function CategoriesPage({
               <p role="status" className="sr-only">
                 Verificando categorias com produtos…
               </p>
-              <div
-                aria-hidden="true"
-                className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
-              >
-                {Array.from({ length: 4 }, (_, i) => (
-                  <div
-                    key={i}
-                    className="flex min-h-36 animate-pulse flex-col items-center justify-center gap-3 rounded-2xl border bg-card p-4 motion-reduce:animate-none"
-                  >
-                    <div className="size-16 rounded-full bg-muted" />
-                    <div className="h-4 w-3/4 rounded bg-muted" />
-                  </div>
-                ))}
-              </div>
             </>
           )}
           {availability.query.isError && <p role="alert">{availability.query.error.message}</p>}
@@ -236,7 +223,10 @@ export function CategoriesPage({
               Tentar novamente
             </button>
           )}
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <div
+            aria-busy={availability.query.isFetching || availability.waiting}
+            className="grid grid-cols-2 items-stretch gap-3 sm:grid-cols-3 xl:grid-cols-4"
+          >
             {categories.map((g) => {
               const Icon = illustrations[g.codigo] ?? Package;
               return (
@@ -256,7 +246,7 @@ export function CategoriesPage({
                     productSearchStore.reset();
                     onSelect(g.codigo);
                   }}
-                  className="group flex min-h-36 cursor-pointer flex-col items-center justify-center gap-3 rounded-2xl border bg-card p-4 text-center font-semibold transition-shadow hover:border-primary hover:shadow-card"
+                  className="group flex min-h-48 min-w-0 w-full cursor-pointer flex-col items-center justify-start gap-3 rounded-2xl border bg-card p-4 text-center font-semibold transition-shadow hover:border-primary hover:shadow-card sm:p-5"
                 >
                   <span
                     aria-hidden
@@ -264,10 +254,27 @@ export function CategoriesPage({
                   >
                     <Icon className="size-8" strokeWidth={1.8} />
                   </span>
-                  <span>{g.nome}</span>
+                  <span className="min-w-0 w-full text-sm leading-snug [overflow-wrap:anywhere] sm:text-base">
+                    {g.nome}
+                  </span>
                 </button>
               );
             })}
+            {(availability.query.isFetching || availability.waiting) &&
+              Array.from({ length: Math.max(1, availability.remaining ?? 6) }, (_, i) => (
+                <div
+                  key={`pending-${i}`}
+                  data-testid="category-card-skeleton"
+                  aria-hidden="true"
+                  className="flex min-h-48 min-w-0 w-full flex-col items-center justify-start gap-3 rounded-2xl border bg-card p-4 sm:p-5"
+                >
+                  <div className="size-16 shrink-0 animate-pulse rounded-full bg-muted motion-reduce:animate-none" />
+                  <div className="mt-1 w-full animate-pulse space-y-2 motion-reduce:animate-none">
+                    <div className="mx-auto h-4 w-3/4 rounded bg-muted" />
+                    <div className="mx-auto h-4 w-1/2 rounded bg-muted" />
+                  </div>
+                </div>
+              ))}
           </div>
           {!categories.length &&
             !availability.query.isFetching &&

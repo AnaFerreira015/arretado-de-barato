@@ -56,3 +56,42 @@ it("oculta categoria vazia, reutiliza dados ao abri-la e não repete a descobert
   view.unmount();
   client.clear();
 });
+
+it("mostra produtos confirmados antes do fim do lote e mantém skeletons na mesma grade", async () => {
+  productFormStore.set((s) => ({
+    ...s,
+    place: { mode: "municipio", municipio: 2704302, raio: 5, coords: null },
+  }));
+  let release!: (value: unknown) => void;
+  const pending = new Promise((resolve) => {
+    release = resolve;
+  });
+  search.mockImplementation(({ data }: { data: { query: { gpc: string } } }) =>
+    data.query.gpc === "74000000"
+      ? pending
+      : Promise.resolve({
+          ok: true,
+          fetchedAt: "2026-11-07T08:00:00Z",
+          page: {
+            items: [{ ...sale("PRODUTO"), gpc: data.query.gpc, ncm: "01059400" }],
+            ultimaPagina: true,
+          },
+        }),
+  );
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const view = render(
+    <QueryClientProvider client={client}>
+      <CategoriesPage selected={null} onSelect={() => {}} />
+    </QueryClientProvider>,
+  );
+  const button = await screen.findByRole("button", { name: "Alimentos / Bebidas / Tabaco" });
+  expect(screen.getByText("Verificando categorias com produtos…")).toBeInTheDocument();
+  const skeleton = screen.getAllByTestId("category-card-skeleton")[0]!;
+  expect(skeleton.parentElement).toBe(button.parentElement);
+  release({ ok: true, fetchedAt: "2026-11-07T08:00:00Z", page: { items: [], ultimaPagina: true } });
+  await waitFor(() =>
+    expect(screen.queryByTestId("category-card-skeleton")).not.toBeInTheDocument(),
+  );
+  view.unmount();
+  client.clear();
+});

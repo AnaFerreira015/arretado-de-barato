@@ -43,7 +43,7 @@ it("retorna apenas categorias com registros compatíveis e tenta outros termos a
   const result = await checkCategoryAvailability(search, args());
   expect(result.found.map((r) => r.code)).toEqual(["47000000"]);
   expect(result.checked).toBe(AVAILABILITY_BATCH_SIZE);
-  expect(max).toBeLessThanOrEqual(2);
+  expect(max).toBeLessThanOrEqual(4);
   expect(search.mock.calls.length).toBeLessThanOrEqual(AVAILABILITY_BATCH_SIZE * 3);
 });
 it("diferencia erro de categoria vazia e rejeita resultados com GPC incorreto", async () => {

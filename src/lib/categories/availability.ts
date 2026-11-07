@@ -5,7 +5,7 @@ import { belongsToCategory } from "./classification";
 import { CATEGORY_TERMS, CATEGORY_BROWSE } from "./catalog";
 import { GPC_SEGMENTS } from "@/lib/economiza/constants";
 
-export const AVAILABILITY_BATCH_SIZE = 6;
+export const AVAILABILITY_BATCH_SIZE = 12;
 const priority = [
   "50000000",
   "47000000",
@@ -29,12 +29,21 @@ export type AvailabilityPage = {
 };
 export async function checkCategoryAvailability(
   search: Search,
-  args: { place: Place; days: number; demo: boolean; offset: number; signal: AbortSignal },
+  args: {
+    place: Place;
+    days: number;
+    demo: boolean;
+    offset: number;
+    signal: AbortSignal;
+    onFound?: (found: AvailabilityPage["found"][number]) => void;
+    onProgress?: (checked: number, total: number) => void;
+  },
 ): Promise<AvailabilityPage> {
   const codes = AVAILABILITY_CODES.slice(args.offset, args.offset + AVAILABILITY_BATCH_SIZE);
   const found: AvailabilityPage["found"] = [];
   let failed = 0;
   let index = 0;
+  let checked = 0;
   async function worker() {
     while (index < codes.length && !args.signal.aborted) {
       const code = codes[index++]!;
@@ -64,7 +73,7 @@ export async function checkCategoryAvailability(
           }
           const items = result.page.items.filter((record) => belongsToCategory(record, code));
           if (items.length) {
-            found.push({
+            const match: AvailabilityPage["found"][number] = {
               code,
               page: {
                 items,
@@ -73,7 +82,9 @@ export async function checkCategoryAvailability(
                 capped: false,
                 next: { page: 1, sources: terms.map((_, i) => i) },
               },
-            });
+            };
+            found.push(match);
+            args.onFound?.(match);
             confirmed = true;
             break;
           }
@@ -83,13 +94,13 @@ export async function checkCategoryAvailability(
         }
       }
       if (!confirmed && uncertain) failed++;
+      args.onProgress?.(++checked, codes.length);
     }
   }
-  await Promise.all([worker(), worker()]);
+  await Promise.all(Array.from({ length: 4 }, () => worker()));
   if (args.signal.aborted) throw new Error("Consulta cancelada.");
   if (failed === codes.length)
     throw new Error("Não foi possível verificar as categorias. Tente novamente.");
-  found.sort((a, b) => codes.indexOf(a.code) - codes.indexOf(b.code));
   const next = args.offset + codes.length;
   return {
     found,
