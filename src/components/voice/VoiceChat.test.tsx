@@ -27,7 +27,7 @@ it("abre conversa sobre a tela e permite fechar sem navegar", async () => {
   );
   fireEvent.click(screen.getByText("Abrir chat"));
   expect(screen.getByRole("dialog")).toBeVisible();
-  expect(screen.getByRole("log")).toHaveTextContent(/O que você quer encontrar/);
+  expect(await screen.findByRole("log")).toHaveTextContent(/O que você quer encontrar/);
   expect(screen.getByText("Pesquisa atual preservada")).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Fechar chat" }));
   await waitFor(() => expect(screen.queryByRole("dialog")).not.toBeInTheDocument());
@@ -54,7 +54,7 @@ it("envia texto livre e mostra a conversa e preços sem confirmação adicional"
     </VoiceChatProvider>,
   );
   fireEvent.click(screen.getByText("Abrir chat"));
-  fireEvent.change(screen.getByRole("textbox", { name: "Mensagem para o Arretado" }), {
+  fireEvent.change(await screen.findByRole("textbox", { name: "Mensagem para o Arretado" }), {
     target: { value: "buscar leite de 1 litro em Maceió" },
   });
   fireEvent.click(screen.getByRole("button", { name: "Enviar mensagem" }));

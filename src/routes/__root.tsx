@@ -12,7 +12,7 @@ import { type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { AppShell } from "@/components/eal/AppShell";
-import { VoiceChatProvider } from "@/components/voice/VoiceChat";
+import { VoiceChatProvider } from "@/components/voice/VoiceChatProvider";
 import { Toaster } from "@/components/ui/sonner";
 
 function NotFoundComponent() {

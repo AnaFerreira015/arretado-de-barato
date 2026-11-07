@@ -1,6 +1,5 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
-import * as Dialog from "@radix-ui/react-dialog";
-import { Mic, Send, Square, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Mic, Send, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useVoiceAssistant } from "@/lib/voice/useVoiceAssistant";
 import type { SearchMode } from "@/lib/voice/flow";
@@ -9,55 +8,7 @@ import { voicePrice } from "@/lib/voice/fuel";
 import { formatDateTime } from "@/lib/economiza/format";
 import { MUNICIPIOS, FUEL_TYPES } from "@/lib/economiza/constants";
 
-import { ChatContext } from "./voiceChatContext";
-
-export function VoiceChatProvider({ children }: { children: ReactNode }) {
-  const [open, setOpen] = useState(false);
-  const [mode, setMode] = useState<SearchMode>("produto");
-  const opener = useRef<HTMLElement | null>(null);
-  return (
-    <ChatContext.Provider
-      value={(next = "produto") => {
-        opener.current = document.activeElement as HTMLElement;
-        setMode(next);
-        setOpen(true);
-      }}
-    >
-      {children}
-      <Dialog.Root open={open} onOpenChange={setOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 z-50 bg-foreground/30 backdrop-blur-sm" />
-          <Dialog.Content
-            onCloseAutoFocus={(e) => {
-              e.preventDefault();
-              (opener.current?.isConnected
-                ? opener.current
-                : document.getElementById("conteudo")
-              )?.focus();
-            }}
-            className="fixed inset-x-0 bottom-0 z-50 flex h-[min(92dvh,850px)] flex-col rounded-t-2xl border bg-background shadow-xl sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[min(480px,calc(100vw-40px))] sm:rounded-2xl"
-          >
-            <header className="border-b px-5 py-4 pr-14">
-              <Dialog.Title className="text-xl font-extrabold">
-                Converse com o Arretado
-              </Dialog.Title>
-              <Dialog.Description className="text-sm text-muted-foreground">
-                Fale ou escreva para encontrar preços.
-              </Dialog.Description>
-            </header>
-            <Dialog.Close
-              className="absolute right-3 top-3 grid size-11 cursor-pointer place-items-center rounded-xl hover:bg-accent"
-              aria-label="Fechar chat"
-            >
-              <X aria-hidden />
-            </Dialog.Close>
-            <ChatConversation initialMode={mode} />
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-    </ChatContext.Provider>
-  );
-}
+export { VoiceChatProvider } from "./VoiceChatProvider";
 
 export function ChatConversation({ initialMode = "produto" }: { initialMode?: SearchMode }) {
   const assistant = useVoiceAssistant({}, initialMode);
