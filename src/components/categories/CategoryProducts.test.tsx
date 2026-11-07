@@ -80,3 +80,31 @@ it("agrupa mudanças rápidas de período e usa o último filtro", async () => {
   result.unmount();
   client.clear();
 });
+
+it("mostra skeletons no lugar dos cartões até o carregamento terminar", async () => {
+  productFormStore.set((s) => ({
+    ...s,
+    place: { mode: "municipio", municipio: 2704302, raio: 5, coords: null },
+  }));
+  let resolve!: (value: unknown) => void;
+  const response = new Promise((r) => {
+    resolve = r;
+  });
+  search.mockReturnValue(response);
+  const { client, view } = setup();
+  const result = render(view("47000000"));
+  expect(screen.getAllByTestId("category-product-skeleton")).toHaveLength(4);
+  expect(screen.getByRole("status")).toHaveClass("sr-only");
+  expect(screen.queryByText(/Nenhum produto encontrado/)).not.toBeInTheDocument();
+  await act(async () => {
+    resolve({
+      ok: true,
+      fetchedAt: "2026-11-07T08:00:00Z",
+      page: { items: [{ ...sale("SABAO", 5), gpc: "47000000" }], ultimaPagina: true },
+    });
+  });
+  await waitFor(() => expect(screen.getAllByRole("article")).toHaveLength(1));
+  expect(screen.queryByTestId("category-product-skeleton")).not.toBeInTheDocument();
+  result.unmount();
+  client.clear();
+});

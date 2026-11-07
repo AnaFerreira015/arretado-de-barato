@@ -15,11 +15,18 @@ import { RecordDetailDialog } from "@/components/eal/RecordDetailDialog";
 import type { SaleRecord } from "@/lib/economiza/adapter";
 import { Button } from "@/components/ui/button";
 
-export function CategoryProducts({ category }: { category: string }) {
+export function CategoryProducts({
+  category,
+  showLocationControls = true,
+}: {
+  category: string;
+  showLocationControls?: boolean;
+}) {
   const form = productFormStore.use();
   const prefs = prefsStore.use();
-  const [place, setPlace] = useState(() => form.place ?? initialPlace());
-  const [days, setDays] = useState(form.dias);
+  const [fallbackPlace] = useState(initialPlace);
+  const place = form.place ?? fallbackPlace;
+  const days = form.dias;
   const [text, setText] = useState("");
   const [term, setTerm] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -58,23 +65,23 @@ export function CategoryProducts({ category }: { category: string }) {
   const fetchedAt = pages.map((p) => p.fetchedAt).sort()[0];
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border bg-card p-4">
-        <SearchLocationFields
-          place={place}
-          dias={days}
-          errors={{}}
-          onPlaceChange={(next) => {
-            setPlace(next);
-            setDetail(null);
-            productFormStore.set((s) => ({ ...s, place: next }));
-          }}
-          onDaysChange={(next) => {
-            setDays(next);
-            setDetail(null);
-            productFormStore.set((s) => ({ ...s, dias: next }));
-          }}
-        />
-      </div>
+      {showLocationControls && (
+        <div className="rounded-2xl border bg-card p-4">
+          <SearchLocationFields
+            place={place}
+            dias={days}
+            errors={{}}
+            onPlaceChange={(next) => {
+              setDetail(null);
+              productFormStore.set((s) => ({ ...s, place: next }));
+            }}
+            onDaysChange={(next) => {
+              setDetail(null);
+              productFormStore.set((s) => ({ ...s, dias: next }));
+            }}
+          />
+        </div>
+      )}
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -131,7 +138,7 @@ export function CategoryProducts({ category }: { category: string }) {
               disabled={query.isFetching}
               onClick={() => void query.refetch()}
             >
-              Atualizar
+              {query.isFetching && records.length ? "Atualizando…" : "Atualizar"}
             </Button>
           </div>
           {prefs.demo && (
@@ -152,7 +159,7 @@ export function CategoryProducts({ category }: { category: string }) {
             </p>
           )}
           {(query.isFetching || waiting) && (
-            <p role="status">
+            <p role="status" className="sr-only">
               {records.length ? "Atualizando produtos…" : "Carregando produtos da categoria…"}
             </p>
           )}
@@ -165,15 +172,47 @@ export function CategoryProducts({ category }: { category: string }) {
               Atualizar para tentar novamente.
             </p>
           )}
-          {!query.isPending && !query.isError && !records.length && (
-            <p role="status">
-              Nenhum produto encontrado nas páginas consultadas. Tente outro nome, local ou período.
-            </p>
-          )}
-          <div className="grid gap-4 md:grid-cols-2">
+          {!query.isPending &&
+            !query.isFetching &&
+            !waiting &&
+            !query.isError &&
+            !records.length && (
+              <p role="status">
+                Nenhum produto encontrado nas páginas consultadas. Tente outro nome, local ou
+                período.
+              </p>
+            )}
+          <div
+            className="grid gap-4 md:grid-cols-2"
+            aria-busy={query.isFetching || waiting}
+            aria-label="Produtos da categoria"
+          >
             {records.map((r) => (
               <RecordCard key={r.id} r={r} distanceKm={null} onDetails={() => setDetail(r)} />
             ))}
+            {((!records.length && (query.isPending || waiting)) || query.isFetchingNextPage) &&
+              Array.from({ length: records.length ? 2 : 4 }, (_, index) => (
+                <div
+                  key={`skeleton-${index}`}
+                  data-testid="category-product-skeleton"
+                  aria-hidden="true"
+                  className="space-y-4 rounded-2xl border bg-card p-5 shadow-soft"
+                >
+                  <div className="animate-pulse space-y-4 motion-reduce:animate-none">
+                    <div className="h-5 w-3/4 rounded bg-muted" />
+                    <div className="h-4 w-1/2 rounded bg-muted" />
+                    <div className="h-9 w-1/3 rounded bg-primary/15" />
+                    <div className="space-y-2">
+                      <div className="h-4 w-2/3 rounded bg-muted" />
+                      <div className="h-4 w-full rounded bg-muted" />
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <div className="h-11 flex-1 rounded-xl bg-muted" />
+                      <div className="h-11 w-12 rounded-xl bg-muted" />
+                    </div>
+                  </div>
+                </div>
+              ))}
           </div>
           {query.hasNextPage && (
             <Button disabled={query.isFetching} onClick={() => void query.fetchNextPage()}>

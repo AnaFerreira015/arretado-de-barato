@@ -18,3 +18,11 @@ Falhas em uma das consultas não descartam os registros das outras; o usuário r
 ## Demonstração e verificações
 
 O gerador demonstrativo passou a respeitar o GPC solicitado e continua identificado como fictício. Testes cobrem catálogo, filtros, limites, cancelamento, paginação vazia, falhas parciais, cache ao voltar, isolamento por categoria/modo e agrupamento de filtros. A integração real depende da disponibilidade e dos dados da SEFAZ; não foi consultada com dados reais nesta entrega.
+
+## Navegação e carregamento
+
+O local e o período são escolhidos logo na entrada da área de categorias, antes da seleção de um cartão. A solicitação de GPS continua explícita pelo botão Usar minha localização. O mesmo local é usado na vitrine, sem duplicar os controles.
+
+A categoria selecionada fica no parâmetro `categoria` da URL. O menu Categorias aponta à rota sem esse parâmetro e sempre retorna à grade; o botão Todas as categorias tem o mesmo efeito. Links diretos e o histórico do navegador preservam a seleção indicada na URL.
+
+Os ícones da grade agora são vetoriais Lucide, com cor, espessura, tamanho e fundo padronizados. O carregamento inicial mostra quatro cartões skeleton; a paginação acrescenta dois skeletons após os produtos já exibidos. Os avisos de carregamento ficam disponíveis aos leitores de tela e a animação respeita movimento reduzido. Atualizações em segundo plano preservam os cartões e indicam Atualizando no botão.
