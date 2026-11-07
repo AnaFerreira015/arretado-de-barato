@@ -1,6 +1,7 @@
 import type { SearchResponse } from "@/lib/economiza/api.functions";
 import type { ProductQuery, Place } from "@/lib/economiza/validation";
 import type { SaleRecord } from "@/lib/economiza/adapter";
+import { belongsToCategory } from "./classification";
 import { CATEGORY_BROWSE } from "./catalog";
 export type BrowseCursor = { page: number; sources: number[] };
 export type BrowsePage = {
@@ -67,7 +68,7 @@ export async function browseCategory(
     }
     dates.push(result.fetchedAt);
     // Mesmo que a origem ignore o filtro, não misturar produtos de outras categorias.
-    items.push(...result.page.items.filter((r) => r.gpc === args.category));
+    items.push(...result.page.items.filter((r) => belongsToCategory(r, args.category)));
     if (!result.page.ultimaPagina) more.push(index);
   }
   const capped = more.length > 0 && args.cursor.page >= CATEGORY_BROWSE.maxPages;

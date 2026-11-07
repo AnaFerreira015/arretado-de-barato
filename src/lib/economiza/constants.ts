@@ -85,25 +85,26 @@ export const municipioNome = (codigo: number) =>
   MUNICIPIOS.find((m) => m.codigo === codigo)?.nome ?? String(codigo);
 
 export type GpcSegment = { codigo: string; nome: string };
+// Nomes e códigos conferidos com listarCategoriasGpc (Anexo III) em 07/11/2026.
 export const GPC_SEGMENTS: GpcSegment[] = [
-  ["74000000", "Acampamento"], ["64000000", "Acessórios pessoais"],
-  ["50000000", "Alimentos, bebidas e tabaco"], ["89000000", "Animais vivos"],
-  ["78000000", "Aparelhos elétricos"], ["70000000", "Artes, artesanato e bordado"],
-  ["62000000", "Papelaria e escritório"], ["68000000", "Audiovisual e fotografia"],
-  ["86000000", "Brinquedos e jogos"], ["63000000", "Calçados"], ["87000000", "Combustíveis e gases"],
-  ["66000000", "Comunicação"], ["94000000", "Cultivos agrícolas (Crops)"],
-  ["10000000", "Animais de estimação e ração"],
-  ["79000000", "Encanamento, aquecimento e ar-condicionado"], ["71000000", "Equipamentos esportivos"],
-  ["84000000", "Oficina e armazenagem de ferramentas"], ["82000000", "Ferramentas elétricas"],
-  ["80000000", "Ferramentas manuais"], ["53000000", "Higiene pessoal e beleza"],
-  ["65000000", "Informática"], ["88000000", "Lubrificantes"],
-  ["60000000", "Livros e materiais impressos"], ["81000000", "Jardinagem"],
-  ["75000000", "Móveis para casa e escritório"], ["61000000", "Música"],
-  ["93000000", "Plantas de horticultura"], ["47000000", "Produtos de limpeza"],
-  ["83000000", "Construção"], ["92000000", "Recipientes de armazenagem e transporte"],
-  ["58000000", "Segmento transversal"], ["85000000", "Segurança e proteção (faça você mesmo)"],
-  ["91000000", "Segurança e vigilância"], ["77000000", "Automotivo"], ["51000000", "Saúde"],
-  ["73000000", "Utensílios de cozinha"], ["72000000", "Utensílios domésticos"], ["67000000", "Vestuário"],
+  ["74000000", "Acampamento"], ["64000000", "Acessórios Pessoais"],
+  ["50000000", "Alimentos / Bebidas / Tabaco"], ["89000000", "Animais Vivos"],
+  ["78000000", "Aparelhos Elétricos"], ["70000000", "Artes/Artesanato/Bordado"],
+  ["62000000", "Artigos de Papelaria/ Equipamentos para Escritório/ Suprimentos de Ocasião"], ["68000000", "Audiovisual / Fotografia"],
+  ["86000000", "Brinquedos/Jogos"], ["63000000", "Calçados"], ["87000000", "Combustíveis/Gases"],
+  ["66000000", "Comunicação"], ["94000000", "Crops"],
+  ["10000000", "Cuidados com os animais de estimação/Ração"],
+  ["79000000", "Encanamento/Aquecimento/Ventilação/Condicionamento de Ar"], ["71000000", "Equipamentos Esportivos"],
+  ["84000000", "Equipamentos para Oficina/Armazenagem de Ferramentas"], ["82000000", "Ferramentas/Equipamentos-Elétricos"],
+  ["80000000", "Ferramentas/Equipamentos-Manuais"], ["53000000", "Higiene/Cuidados Pessoais/ Beleza"],
+  ["65000000", "Informática/Computação"], ["88000000", "Lubrificantes"],
+  ["60000000", "Materiais de Referência/Impressos/Textuais"], ["81000000", "Materiais para Jardinagem/Gramado"],
+  ["75000000", "Móveis e Artigos Mobiliários para Casa e Escritório"], ["61000000", "Música"],
+  ["93000000", "Plantas de Horticultura"], ["47000000", "Produtos de Higiene/Limpeza"],
+  ["83000000", "Produtos para Construção"], ["92000000", "Recipientes de Armazenagem/Transporte"],
+  ["58000000", "Segmento Transversal"], ["85000000", "Segurança/Proteção – DIY"],
+  ["91000000", "Segurança/Vigilância"], ["77000000", "Setor Automotivo"], ["51000000", "Setor da Saúde"],
+  ["73000000", "Utensílios de Cozinha"], ["72000000", "Utensílios Domésticos"], ["67000000", "Vestuário"],
 ].map(([codigo, nome]) => ({ codigo: codigo!, nome: nome! }));
 export const GPC_CODES = new Set(GPC_SEGMENTS.map((g) => g.codigo));
 

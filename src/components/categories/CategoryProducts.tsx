@@ -41,7 +41,7 @@ export function CategoryProducts({
   }, [scope]);
   const waiting = settledScope !== scope;
   const query = useInfiniteQuery({
-    queryKey: ["category-products", category, location, days, terms, prefs.demo],
+    queryKey: ["category-products-v2", category, location, days, terms, prefs.demo],
     enabled: !!location && terms.length > 0 && !waiting,
     initialPageParam: { page: 1, sources: terms.map((_, i) => i) } as BrowseCursor,
     queryFn: ({ pageParam, signal }) =>
@@ -178,8 +178,8 @@ export function CategoryProducts({
             !query.isError &&
             !records.length && (
               <p role="status">
-                Nenhum produto encontrado nas páginas consultadas. Tente outro nome, local ou
-                período.
+                Nenhum produto com classificação compatível nas páginas consultadas. Tente outro
+                nome, local ou período.
               </p>
             )}
           <div

@@ -3,7 +3,7 @@ export const CATEGORY_TERMS: Record<string, readonly string[]> = {
   "74000000": ["barraca", "lanterna", "colchonete"],
   "64000000": ["bolsa", "carteira", "relogio"],
   "50000000": ["arroz", "leite", "cafe"],
-  "89000000": ["peixe", "ave", "galinha"],
+  "89000000": ["peixe vivo", "ave viva", "galinha viva"],
   "78000000": ["ventilador", "liquidificador", "ferro"],
   "70000000": ["linha", "tinta", "tecido"],
   "62000000": ["caderno", "caneta", "papel"],
