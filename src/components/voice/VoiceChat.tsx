@@ -30,7 +30,10 @@ export function VoiceChatProvider({ children }: { children: ReactNode }) {
           <Dialog.Content
             onCloseAutoFocus={(e) => {
               e.preventDefault();
-              opener.current?.focus();
+              (opener.current?.isConnected
+                ? opener.current
+                : document.getElementById("conteudo")
+              )?.focus();
             }}
             className="fixed inset-x-0 bottom-0 z-50 flex h-[min(92dvh,850px)] flex-col rounded-t-2xl border bg-background shadow-xl sm:inset-x-auto sm:bottom-5 sm:right-5 sm:w-[min(480px,calc(100vw-40px))] sm:rounded-2xl"
           >
@@ -282,8 +285,12 @@ export function ChatConversation({ initialMode = "produto" }: { initialMode?: Se
             </Button>
           </div>
         ) : (
-          <div className="flex items-end gap-2">
+          <div className="flex flex-wrap items-end gap-2">
+            <label htmlFor="chat-mensagem" className="w-full text-sm font-semibold">
+              Mensagem para o Arretado
+            </label>
             <textarea
+              id="chat-mensagem"
               ref={input}
               aria-label="Mensagem para o Arretado"
               value={text}

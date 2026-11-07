@@ -27,6 +27,7 @@ export function ResultsSection<Q>({
   const [sort, setSort] = useState<SortKey>("preco");
   const [detail, setDetail] = useState<SaleRecord | null>(null);
   const sortId = useId();
+  const titleId = useId();
   const hasOrigin = !!state.origin;
   const effectiveSort = sort === "distancia" && !hasOrigin ? "preco" : sort;
   const sorted = useMemo(() => sortRecords(state.items, effectiveSort, state.origin), [state.items, effectiveSort, state.origin]);
@@ -39,7 +40,7 @@ export function ResultsSection<Q>({
     : `${state.items.length} de ${total} registros carregados`;
 
   const live =
-    state.status === "loading"
+    (state.status === "loading" || state.status === "loadingMore")
       ? `Pesquisando ${kindLabel}…`
       : state.status === "error"
         ? ""
@@ -50,7 +51,7 @@ export function ResultsSection<Q>({
           : "";
 
   return (
-    <section aria-labelledby="res-title" className="mt-6 space-y-4">
+    <section aria-label="Resultados da pesquisa" className="mt-6 space-y-4">
       <p className="sr-only" role="status" aria-live="polite">
         {live}
       </p>
@@ -73,7 +74,7 @@ export function ResultsSection<Q>({
         <>
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 id="res-title" className="text-xl font-bold">
+              <h2 id={titleId} className="text-xl font-bold">
                 Resultados
                 {state.demo && <span className="ml-2 rounded bg-warning-soft px-2 py-0.5 text-sm text-warning-foreground">fictícios</span>}
               </h2>

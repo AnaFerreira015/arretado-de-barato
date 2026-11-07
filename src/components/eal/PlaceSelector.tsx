@@ -2,8 +2,14 @@ import { useId, useState } from "react";
 import { Check, ChevronsUpDown, LocateFixed, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
-import { Slider } from "@/components/ui/slider";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import { Checkbox } from "@/components/ui/checkbox";
 import { LIMITS, MUNICIPIOS, municipioNome } from "@/lib/economiza/constants";
 import { prefsStore } from "@/lib/store";
@@ -20,7 +26,12 @@ export type PlaceState = {
 
 export const initialPlace = (): PlaceState => {
   const p = prefsStore.get();
-  return { mode: "municipio", municipio: p.remember ? p.municipio : null, raio: LIMITS.raioDefault, coords: null };
+  return {
+    mode: "municipio",
+    municipio: p.remember ? p.municipio : null,
+    raio: LIMITS.raioDefault,
+    coords: null,
+  };
 };
 
 export function PlaceSelector({
@@ -37,7 +48,7 @@ export function PlaceSelector({
   const [open, setOpen] = useState(false);
   const [geoStatus, setGeoStatus] = useState<"idle" | "loading" | "denied" | "error">("idle");
   const prefs = prefsStore.use();
-  const ids = { label: useId(), err: useId(), raio: useId(), geo: useId() };
+  const ids = { label: useId(), err: useId(), raio: useId(), geo: useId(), remember: useId() };
   const munErr = errors.municipio || errors.place;
   const geoErr = errors.geolocalizacao;
 
@@ -50,7 +61,11 @@ export function PlaceSelector({
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setGeoStatus("idle");
-        onChange({ ...value, mode: "geo", coords: { lat: pos.coords.latitude, lng: pos.coords.longitude } });
+        onChange({
+          ...value,
+          mode: "geo",
+          coords: { lat: pos.coords.latitude, lng: pos.coords.longitude },
+        });
       },
       (err) => {
         setGeoStatus(err.code === err.PERMISSION_DENIED ? "denied" : "error");
@@ -68,34 +83,44 @@ export function PlaceSelector({
 
   return (
     <fieldset className="space-y-3">
-      <legend className={hideHeading ? "sr-only" : "mb-1 text-base font-semibold"}>Onde pesquisar?</legend>
+      <legend className={hideHeading ? "sr-only" : "mb-1 text-base font-semibold"}>
+        Onde pesquisar?
+      </legend>
 
       {value.mode === "geo" && value.coords ? (
         <div className="rounded-lg border-2 border-primary bg-primary-soft p-3">
           <p className="flex items-center gap-2 font-semibold text-accent-foreground">
             <LocateFixed aria-hidden className="size-5" /> Usando sua localização atual
           </p>
-          <div className="mt-3">
+          <div className="mt-1 h-11 w-full cursor-pointer accent-primary">
             <label htmlFor={ids.raio} className="text-sm font-semibold">
               Distância máxima: {value.raio} km
             </label>
-            <Slider
+            <input
+              type="range"
               id={ids.raio}
-              className="mt-3"
+              className="mt-1 h-11 w-full cursor-pointer accent-primary"
               min={LIMITS.raioMin}
               max={LIMITS.raioMax}
               step={1}
-              value={[value.raio]}
-              onValueChange={([r]) => onChange({ ...value, raio: r ?? value.raio })}
-              aria-label={`Distância máxima, ${value.raio} quilômetros`}
+              value={value.raio}
+              onChange={(e) => onChange({ ...value, raio: Number(e.target.value) })}
+              aria-valuetext={`${value.raio} quilômetros`}
+              aria-invalid={!!errors.raio}
+              aria-describedby={errors.raio ? `${ids.raio}-error` : undefined}
             />
             <div className="mt-1 flex justify-between text-sm text-muted-foreground" aria-hidden>
               <span>1 km</span>
               <span>15 km</span>
             </div>
-            <FieldError message={errors.raio} />
+            <FieldError id={`${ids.raio}-error`} message={errors.raio} />
           </div>
-          <Button type="button" variant="link" className="mt-1 px-0" onClick={() => onChange({ ...value, mode: "municipio", coords: null })}>
+          <Button
+            type="button"
+            variant="link"
+            className="mt-1 px-0"
+            onClick={() => onChange({ ...value, mode: "municipio", coords: null })}
+          >
             Escolher um município
           </Button>
         </div>
@@ -114,7 +139,10 @@ export function PlaceSelector({
                 aria-labelledby={ids.label}
                 aria-describedby={munErr ? ids.err : undefined}
                 aria-invalid={!!munErr}
-                className={cn("w-full justify-between border-input font-normal", munErr && "border-destructive")}
+                className={cn(
+                  "w-full justify-between border-input font-normal",
+                  munErr && "border-destructive",
+                )}
               >
                 <span className="flex items-center gap-2 truncate">
                   <MapPin aria-hidden />
@@ -123,15 +151,32 @@ export function PlaceSelector({
                 <ChevronsUpDown aria-hidden className="opacity-60" />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-[--radix-popover-trigger-width] min-w-72 p-0" align="start">
+            <PopoverContent
+              className="w-[--radix-popover-trigger-width] min-w-72 p-0"
+              align="start"
+            >
               <Command>
-                <CommandInput placeholder="Digite o nome do município" aria-label="Buscar município" />
+                <CommandInput
+                  placeholder="Digite o nome do município"
+                  aria-label="Buscar município"
+                />
                 <CommandList>
                   <CommandEmpty>Nenhum município encontrado.</CommandEmpty>
                   <CommandGroup>
                     {MUNICIPIOS.map((m) => (
-                      <CommandItem key={m.codigo} value={m.nome} onSelect={() => pick(m.codigo)} className="min-h-11 text-base">
-                        <Check aria-hidden className={cn("size-4", value.municipio === m.codigo ? "opacity-100" : "opacity-0")} />
+                      <CommandItem
+                        key={m.codigo}
+                        value={m.nome}
+                        onSelect={() => pick(m.codigo)}
+                        className="min-h-11 text-base"
+                      >
+                        <Check
+                          aria-hidden
+                          className={cn(
+                            "size-4",
+                            value.municipio === m.codigo ? "opacity-100" : "opacity-0",
+                          )}
+                        />
                         {m.nome}
                       </CommandItem>
                     ))}
@@ -142,11 +187,19 @@ export function PlaceSelector({
           </Popover>
           <FieldError id={ids.err} message={munErr} />
 
-          <label className="mt-2 flex min-h-11 cursor-pointer items-center gap-3 text-sm">
+          <label
+            htmlFor={ids.remember}
+            className="mt-2 flex min-h-11 cursor-pointer items-center gap-3 text-sm"
+          >
             <Checkbox
+              id={ids.remember}
               checked={prefs.remember}
               onCheckedChange={(c) =>
-                prefsStore.set((p) => ({ ...p, remember: c === true, municipio: c === true ? value.municipio : null }))
+                prefsStore.set((p) => ({
+                  ...p,
+                  remember: c === true,
+                  municipio: c === true ? value.municipio : null,
+                }))
               }
               className="size-5"
             />
@@ -154,11 +207,21 @@ export function PlaceSelector({
           </label>
 
           <div className="mt-1">
-            <Button type="button" variant="outline" onClick={useLocation} disabled={geoStatus === "loading"} aria-describedby={ids.geo}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={useLocation}
+              disabled={geoStatus === "loading"}
+              aria-describedby={ids.geo}
+            >
               <LocateFixed aria-hidden />
               {geoStatus === "loading" ? "Obtendo localização…" : "Usar minha localização"}
             </Button>
-            <p id={ids.geo} className="mt-1 text-sm text-muted-foreground" role={geoStatus === "denied" || geoStatus === "error" ? "alert" : undefined}>
+            <p
+              id={ids.geo}
+              className="mt-1 text-sm text-muted-foreground"
+              role={geoStatus === "denied" || geoStatus === "error" ? "alert" : undefined}
+            >
               {geoStatus === "denied"
                 ? "Permissão de localização negada. Você pode continuar escolhendo um município."
                 : geoStatus === "error"

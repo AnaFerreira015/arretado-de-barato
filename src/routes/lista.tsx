@@ -1,3 +1,4 @@
+import { focusInvalidField } from "@/lib/accessibility";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useId, useRef, useState } from "react";
 import { Loader2, Pencil, Plus, Search, Trash2, X } from "lucide-react";
@@ -232,16 +233,16 @@ function AddItemForm() {
   };
   return (
     <form className="card-surface grid gap-3 p-4 sm:grid-cols-[2fr_1fr_1fr_2fr_auto] sm:items-end" noValidate
-      onSubmit={(e) => { e.preventDefault(); submit(); }} aria-label="Adicionar item à lista">
+      onSubmit={(e) => { e.preventDefault(); submit(); focusInvalidField(e.currentTarget); }} aria-label="Adicionar item à lista">
       <div>
         <label htmlFor={ids.nome} className="block text-sm font-semibold">Item</label>
-        <Input id={ids.nome} value={nome} maxLength={50} onChange={(e) => setNome(e.target.value)} aria-invalid={!!errors.nome} className="mt-1 min-h-11 border-2 border-input" placeholder="Ex.: arroz" />
-        <FieldError message={errors.nome} />
+        <Input id={ids.nome} value={nome} maxLength={50} onChange={(e) => setNome(e.target.value)} aria-invalid={!!errors.nome} aria-describedby={errors.nome ? `${ids.nome}-error` : undefined} className="mt-1 min-h-11 border-2 border-input" placeholder="Ex.: arroz" />
+        <FieldError id={`${ids.nome}-error`} message={errors.nome} />
       </div>
       <div>
         <label htmlFor={ids.qtd} className="block text-sm font-semibold">Quantidade</label>
-        <Input id={ids.qtd} inputMode="decimal" value={qtd} onChange={(e) => setQtd(e.target.value)} aria-invalid={!!errors.qtd} className="mt-1 min-h-11 border-2 border-input" />
-        <FieldError message={errors.qtd} />
+        <Input id={ids.qtd} inputMode="decimal" value={qtd} onChange={(e) => setQtd(e.target.value)} aria-invalid={!!errors.qtd} aria-describedby={errors.qtd ? `${ids.qtd}-error` : undefined} className="mt-1 min-h-11 border-2 border-input" />
+        <FieldError id={`${ids.qtd}-error`} message={errors.qtd} />
       </div>
       <div>
         <label htmlFor={ids.un} className="block text-sm font-semibold">Unidade</label>
@@ -249,8 +250,8 @@ function AddItemForm() {
       </div>
       <div>
         <label htmlFor={ids.gtin} className="block text-sm font-semibold">Código de barras (opcional)</label>
-        <Input id={ids.gtin} inputMode="numeric" maxLength={14} value={gtin} onChange={(e) => setGtin(e.target.value.replace(/\D/g, ""))} aria-invalid={!!errors.gtin} className="mt-1 min-h-11 border-2 border-input" />
-        <FieldError message={errors.gtin} />
+        <Input id={ids.gtin} inputMode="numeric" maxLength={14} value={gtin} onChange={(e) => setGtin(e.target.value.replace(/\D/g, ""))} aria-invalid={!!errors.gtin} aria-describedby={errors.gtin ? `${ids.gtin}-error` : undefined} className="mt-1 min-h-11 border-2 border-input" />
+        <FieldError id={`${ids.gtin}-error`} message={errors.gtin} />
       </div>
       <Button type="submit"><Plus aria-hidden /> Adicionar</Button>
     </form>

@@ -52,8 +52,8 @@ function ComparePage() {
             <div className="rounded-lg border-2 border-warning bg-warning-soft p-3 text-warning-foreground">
               <p className="font-semibold">Não dá para confirmar que estes itens são o mesmo produto.</p>
               <p className="text-sm">Os códigos de barras ou as unidades são diferentes ou não foram informados. Marcas, pesos e embalagens podem variar.</p>
-              <label className="mt-2 flex min-h-11 cursor-pointer items-center gap-3 text-sm font-semibold">
-                <Checkbox checked={confirmed} onCheckedChange={(c) => setConfirmed(c === true)} className="size-5" />
+              <label htmlFor="confirmar-equivalencia" className="mt-2 flex min-h-11 cursor-pointer items-center gap-3 text-sm font-semibold">
+                <Checkbox id="confirmar-equivalencia" checked={confirmed} onCheckedChange={(c) => setConfirmed(c === true)} className="size-5" />
                 Conferi e confirmo que são o mesmo produto, na mesma embalagem e quantidade
               </label>
             </div>
@@ -71,10 +71,10 @@ function ComparePage() {
                 {best?.id === r.id && <p className="text-sm font-semibold text-primary">✓ Menor preço desta comparação</p>}
                 <p className="font-semibold">{r.descricao}</p>
                 <dl className="text-sm">
-                  <dt className="inline font-semibold">Unidade: </dt><dd className="inline">{r.unidade}</dd><br />
-                  <dt className="inline font-semibold">Código de barras: </dt><dd className="inline">{r.gtin ?? "não informado"}</dd><br />
-                  <dt className="inline font-semibold">Local: </dt><dd className="inline">{r.store.nome}{r.store.bairro ? `, ${r.store.bairro}` : ""}</dd><br />
-                  <dt className="inline font-semibold">Última venda registrada: </dt><dd className="inline">{formatDateTime(r.dataVendaUtc)}</dd>
+                  <div><dt className="inline font-semibold">Unidade: </dt><dd className="inline">{r.unidade}</dd></div>
+                  <div><dt className="inline font-semibold">Código de barras: </dt><dd className="inline">{r.gtin ?? "não informado"}</dd></div>
+                  <div><dt className="inline font-semibold">Local: </dt><dd className="inline">{r.store.nome}{r.store.bairro ? `, ${r.store.bairro}` : ""}</dd></div>
+                  <div><dt className="inline font-semibold">Última venda registrada: </dt><dd className="inline">{formatDateTime(r.dataVendaUtc)}</dd></div>
                 </dl>
                 <Button variant="outline" size="sm" className="mt-auto" onClick={() => compareStore.set((l) => l.filter((x) => x.id !== r.id))}>
                   <Trash2 aria-hidden /> Remover<span className="sr-only"> {r.descricao}</span>

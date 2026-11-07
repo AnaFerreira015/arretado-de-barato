@@ -1,6 +1,6 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { GitCompareArrows, Heart, Info, ListChecks, Search, Mic, LayoutGrid } from "lucide-react";
-import type { ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { compareStore } from "@/lib/store";
 import { searchMode } from "@/lib/economiza/searchMode";
 
@@ -20,6 +20,13 @@ export function AppShell({ children }: { children: ReactNode }) {
   const openChat = useVoiceChat();
   const compareCount = compareStore.use().length;
   const location = useRouterState({ select: (state) => state.location });
+  const previousPath = useRef(location.pathname);
+  useEffect(() => {
+    if (previousPath.current !== location.pathname) {
+      document.getElementById("conteudo")?.focus();
+      previousPath.current = location.pathname;
+    }
+  }, [location.pathname]);
   const query = location.search as Record<string, unknown>;
   const mode = searchMode(query["tipo"] ?? query["modo"]);
   return (
@@ -87,7 +94,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <span className="sr-only sm:not-sr-only">Comparar</span>
               <span
                 className="rounded-full bg-primary px-2 text-primary-foreground"
-                aria-label={`${compareCount} itens`}
+                aria-label={`Comparar ${compareCount} itens`}
               >
                 {compareCount}
               </span>

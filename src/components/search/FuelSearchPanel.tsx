@@ -1,3 +1,4 @@
+import { focusInvalidField } from "@/lib/accessibility";
 import { useCallback, useEffect, useId, useState } from "react";
 import { BookmarkPlus, Calculator, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -117,28 +118,31 @@ export function FuelSearchPanel() {
         onSubmit={(e) => {
           e.preventDefault();
           submit();
+          focusInvalidField(e.currentTarget);
         }}
       >
         <fieldset>
           <legend className="text-lg font-semibold">Qual combustível?</legend>
           <div
             role="radiogroup"
+            aria-label="Qual combustível?"
             aria-describedby={allErrors.tipoCombustivel ? ids.tipoErr : undefined}
             className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3"
           >
             {FUEL_TYPES.map((f) => (
-              <Button
+              <label
                 key={f.codigo}
-                type="button"
-                variant="chip"
-                role="radio"
-                aria-checked={form.tipo === f.codigo}
-                aria-pressed={form.tipo === f.codigo}
-                className="justify-start whitespace-normal text-left"
-                onClick={() => set({ tipo: f.codigo })}
+                className="relative flex min-h-11 cursor-pointer items-center rounded-full border-2 border-input bg-card px-3 py-2 text-left font-semibold has-[:checked]:border-primary has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring"
               >
+                <input
+                  type="radio"
+                  className="sr-only"
+                  name={`${ids.tipoErr}-tipo`}
+                  checked={form.tipo === f.codigo}
+                  onChange={() => set({ tipo: f.codigo })}
+                />
                 {f.nome}
-              </Button>
+              </label>
             ))}
           </div>
           <FieldError id={ids.tipoErr} message={allErrors.tipoCombustivel} />
@@ -164,12 +168,13 @@ export function FuelSearchPanel() {
             value={form.cnpj}
             onChange={(e) => set({ cnpj: e.target.value.replace(/\D/g, "") })}
             aria-invalid={!!allErrors.cnpj}
+            aria-describedby={allErrors.cnpj ? `${ids.cnpj}-error` : undefined}
             className="mt-2 min-h-11 max-w-sm border-2 border-input"
           />
           <p className="mt-2 text-sm text-muted-foreground">
             Se preenchido, substitui o município ou a localização.
           </p>
-          <FieldError message={allErrors.cnpj} />
+          <FieldError id={`${ids.cnpj}-error`} message={allErrors.cnpj} />
         </details>
         <Button
           type="submit"

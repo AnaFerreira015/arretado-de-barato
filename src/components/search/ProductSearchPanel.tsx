@@ -1,3 +1,4 @@
+import { focusInvalidField } from "@/lib/accessibility";
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { BookmarkPlus, ChevronDown, Search } from "lucide-react";
 import { toast } from "sonner";
@@ -144,25 +145,28 @@ export function ProductSearchPanel() {
         onSubmit={(e) => {
           e.preventDefault();
           submit();
+          focusInvalidField(e.currentTarget);
         }}
         aria-label="Pesquisa de produtos"
       >
         <div role="radiogroup" aria-label="Pesquisar por" className="flex flex-wrap gap-2">
           {(["descricao", "gtin"] as const).map((m) => (
-            <Button
+            <label
               key={m}
-              type="button"
-              variant="chip"
-              role="radio"
-              aria-checked={form.modo === m}
-              aria-pressed={form.modo === m}
-              onClick={() => {
-                set({ modo: m, termo: "" });
-                setErrors({});
-              }}
+              className="relative flex min-h-11 cursor-pointer items-center rounded-full border-2 border-input bg-card px-3 font-semibold has-[:checked]:border-primary has-[:checked]:bg-primary has-[:checked]:text-primary-foreground has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring"
             >
+              <input
+                type="radio"
+                className="sr-only"
+                name={`${ids.termo}-modo`}
+                checked={form.modo === m}
+                onChange={() => {
+                  set({ modo: m, termo: "" });
+                  setErrors({});
+                }}
+              />
               {m === "descricao" ? "Nome do produto" : "Código de barras"}
-            </Button>
+            </label>
           ))}
         </div>
 
@@ -252,9 +256,10 @@ export function ProductSearchPanel() {
                 value={form.cnpj}
                 onChange={(e) => set({ cnpj: e.target.value.replace(/\D/g, "") })}
                 aria-invalid={!!allErrors.cnpj}
+                aria-describedby={allErrors.cnpj ? `${ids.cnpj}-error` : undefined}
                 className="mt-1 min-h-11 border-2 border-input"
               />
-              <FieldError message={allErrors.cnpj} />
+              <FieldError id={`${ids.cnpj}-error`} message={allErrors.cnpj} />
             </div>
             <div className="md:row-span-4 md:grid md:grid-rows-subgrid">
               <label htmlFor={ids.gpc} className="block text-sm font-semibold">
@@ -270,6 +275,7 @@ export function ProductSearchPanel() {
                 onChange={(e) => set({ gpc: e.target.value })}
                 disabled={form.modo !== "descricao"}
                 aria-invalid={!!allErrors.gpc}
+                aria-describedby={allErrors.gpc ? `${ids.gpc}-error` : undefined}
                 className="mt-1 min-h-11 w-full rounded-lg border-2 border-input bg-card px-3 disabled:opacity-60"
               >
                 <option value="">Todas as categorias</option>
@@ -281,7 +287,7 @@ export function ProductSearchPanel() {
                     </option>
                   ))}
               </select>
-              <FieldError message={allErrors.gpc} />
+              <FieldError id={`${ids.gpc}-error`} message={allErrors.gpc} />
             </div>
             <div className="md:row-span-4 md:grid md:grid-rows-subgrid">
               <label htmlFor={ids.ncm} className="block text-sm font-semibold">
@@ -298,9 +304,10 @@ export function ProductSearchPanel() {
                 onChange={(e) => set({ ncm: e.target.value.replace(/\D/g, "") })}
                 disabled={form.modo !== "descricao"}
                 aria-invalid={!!allErrors.ncm}
+                aria-describedby={allErrors.ncm ? `${ids.ncm}-error` : undefined}
                 className="mt-1 min-h-11 border-2 border-input"
               />
-              <FieldError message={allErrors.ncm} />
+              <FieldError id={`${ids.ncm}-error`} message={allErrors.ncm} />
             </div>
           </CollapsibleContent>
         </Collapsible>

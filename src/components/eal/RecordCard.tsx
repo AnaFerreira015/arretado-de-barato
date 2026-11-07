@@ -1,8 +1,23 @@
-import { Clock, GitCompareArrows, Heart, Info, ListPlus, MapPin, Store as StoreIcon } from "lucide-react";
+import { useId } from "react";
+import {
+  Clock,
+  GitCompareArrows,
+  Heart,
+  Info,
+  ListPlus,
+  MapPin,
+  Store as StoreIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import type { SaleRecord } from "@/lib/economiza/adapter";
-import { formatBRL, formatDateTime, formatFuelBRL, formatKm, relativeDays } from "@/lib/economiza/format";
+import {
+  formatBRL,
+  formatDateTime,
+  formatFuelBRL,
+  formatKm,
+  relativeDays,
+} from "@/lib/economiza/format";
 import { LIMITS } from "@/lib/economiza/constants";
 import { compareStore, listStore, uid } from "@/lib/store";
 
@@ -27,7 +42,15 @@ export function addToCompare(r: SaleRecord) {
 export function addRecordToList(r: SaleRecord) {
   listStore.set((l) => [
     ...l,
-    { id: uid(), nome: r.descricaoSefaz || r.descricao, quantidade: 1, unidade: r.unidade, observacao: "", comprado: false, gtin: r.gtin },
+    {
+      id: uid(),
+      nome: r.descricaoSefaz || r.descricao,
+      quantidade: 1,
+      unidade: r.unidade,
+      observacao: "",
+      comprado: false,
+      gtin: r.gtin,
+    },
   ]);
   toast.success("Adicionado à lista de compras.");
 }
@@ -47,12 +70,14 @@ export function RecordCard({
   onFavorite?: (() => void) | undefined;
   showProductActions?: boolean | undefined;
 }) {
+  const titleId = useId();
+  const context = `${r.descricao}, em ${r.store.nome}`;
   const inCompare = compareStore.use().some((c) => c.id === r.id);
   return (
-    <article className="card-surface fade-in flex flex-col gap-4 p-5" aria-labelledby={`t-${r.id}`}>
+    <article className="card-surface fade-in flex flex-col gap-4 p-5" aria-labelledby={titleId}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <h3 id={`t-${r.id}`} className="text-lg font-semibold break-words">
+          <h3 id={titleId} className="text-lg font-semibold break-words">
             {r.descricao}
           </h3>
           {r.descricaoSefaz && r.descricaoSefaz.toUpperCase() !== r.descricao.toUpperCase() && (
@@ -81,32 +106,55 @@ export function RecordCard({
         <p className="flex items-start gap-2">
           <MapPin aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
           <span>
-            {[r.store.bairro, r.store.municipio].filter(Boolean).join(", ") || "Endereço não informado"}
+            {[r.store.bairro, r.store.municipio].filter(Boolean).join(", ") ||
+              "Endereço não informado"}
             {distanceKm != null && <> · aprox. {formatKm(distanceKm)}</>}
           </span>
         </p>
         <p className="flex items-start gap-2 sm:col-span-2">
           <Clock aria-hidden className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
           <span>
-            Última venda registrada: {formatDateTime(r.dataVendaUtc)} ({relativeDays(r.dataVendaUtc)})
+            Última venda registrada: {formatDateTime(r.dataVendaUtc)} (
+            {relativeDays(r.dataVendaUtc)})
           </span>
         </p>
       </div>
 
       <div className="flex flex-wrap gap-2">
-        <Button variant="outline" size="sm" onClick={onDetails}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={onDetails}
+          aria-label={`Detalhes de ${context}`}
+        >
           <Info aria-hidden /> Detalhes
         </Button>
-        <Button variant="outline" size="sm" onClick={() => addToCompare(r)} aria-pressed={inCompare}>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => addToCompare(r)}
+          aria-pressed={inCompare}
+          aria-label={`${inCompare ? "Na comparação" : "Comparar"}: ${context}`}
+        >
           <GitCompareArrows aria-hidden /> {inCompare ? "Na comparação" : "Comparar"}
         </Button>
         {onFavorite && (
-          <Button variant="outline" size="sm" onClick={onFavorite}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onFavorite}
+            aria-label={`Favoritar ${context}`}
+          >
             <Heart aria-hidden /> Favoritar
           </Button>
         )}
         {showProductActions && (
-          <Button variant="outline" size="sm" onClick={() => addRecordToList(r)}>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => addRecordToList(r)}
+            aria-label={`Adicionar à lista: ${context}`}
+          >
             <ListPlus aria-hidden /> Adicionar à lista
           </Button>
         )}
