@@ -47,6 +47,8 @@ import { GPC_SEGMENTS, GPC_CODES } from "@/lib/economiza/constants";
 import { productFormStore, productSearchStore } from "@/lib/economiza/searchStores";
 import { validatePlace, type FieldErrors } from "@/lib/economiza/validation";
 import { toPlace } from "@/lib/economiza/useSearch";
+import { useAvailableCategories } from "@/components/categories/useAvailableCategories";
+import { prefsStore } from "@/lib/store";
 import { CategoryProducts } from "@/components/categories/CategoryProducts";
 
 export const Route = createFileRoute("/categorias")({
@@ -125,13 +127,22 @@ export function CategoriesPage({
   const locationErrors: FieldErrors = {};
   validatePlace(toPlace(place, ""), locationErrors);
   const locationReady = Object.keys(locationErrors).length === 0;
+  const prefs = prefsStore.use();
+  const availability = useAvailableCategories(
+    toPlace(place, ""),
+    form.dias,
+    prefs.demo,
+    locationReady && !selected,
+  );
   const category = GPC_SEGMENTS.find((g) => g.codigo === selected);
   const normalized = (s: string) =>
     s
       .normalize("NFD")
       .replace(/[\u0300-\u036f]/g, "")
       .toLowerCase();
-  const categories = GPC_SEGMENTS.filter((g) => normalized(g.nome).includes(normalized(filter)));
+  const categories = GPC_SEGMENTS.filter(
+    (g) => availability.codes.has(g.codigo) && normalized(g.nome).includes(normalized(filter)),
+  );
   return (
     <div className="space-y-5">
       <header>
@@ -187,6 +198,44 @@ export function CategoriesPage({
               className="min-h-12 w-full rounded-xl border-2 border-input bg-card px-4"
             />
           </label>
+          {(availability.query.isFetching || availability.waiting) && (
+            <>
+              <p role="status" className="sr-only">
+                Verificando categorias com produtos…
+              </p>
+              <div
+                aria-hidden="true"
+                className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5"
+              >
+                {Array.from({ length: 4 }, (_, i) => (
+                  <div
+                    key={i}
+                    className="flex min-h-36 animate-pulse flex-col items-center justify-center gap-3 rounded-2xl border bg-card p-4 motion-reduce:animate-none"
+                  >
+                    <div className="size-16 rounded-full bg-muted" />
+                    <div className="h-4 w-3/4 rounded bg-muted" />
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          {availability.query.isError && <p role="alert">{availability.query.error.message}</p>}
+          {availability.failed && (
+            <p role="status">
+              Algumas categorias não puderam ser verificadas. As categorias abaixo têm produtos
+              confirmados.
+            </p>
+          )}
+          {(availability.query.isError || availability.failed) && (
+            <button
+              type="button"
+              disabled={availability.query.isFetching}
+              onClick={() => void availability.query.refetch()}
+              className="min-h-11 cursor-pointer rounded-xl border border-input px-4 font-semibold text-primary"
+            >
+              Tentar novamente
+            </button>
+          )}
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {categories.map((g) => {
               const Icon = illustrations[g.codigo] ?? Package;
@@ -220,7 +269,27 @@ export function CategoriesPage({
               );
             })}
           </div>
-          {!categories.length && <p role="status">Nenhuma categoria encontrada.</p>}
+          {!categories.length &&
+            !availability.query.isFetching &&
+            !availability.waiting &&
+            !availability.query.isError &&
+            !availability.failed && (
+              <p role="status">
+                {filter
+                  ? "Nenhuma categoria encontrada entre as verificadas."
+                  : "Não encontramos categorias com produtos nas consultas realizadas para este local e período."}
+              </p>
+            )}
+          {availability.query.hasNextPage && (
+            <button
+              type="button"
+              disabled={availability.query.isFetching}
+              onClick={() => void availability.query.fetchNextPage()}
+              className="min-h-11 cursor-pointer rounded-xl bg-primary px-4 font-semibold text-primary-foreground disabled:opacity-60"
+            >
+              Verificar mais categorias
+            </button>
+          )}
           <p className="text-sm text-muted-foreground">
             As categorias seguem a classificação GPC da SEFAZ e se aplicam a produtos com código de
             barras.

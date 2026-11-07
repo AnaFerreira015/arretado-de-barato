@@ -1,3 +1,4 @@
+import { GPC_SEGMENTS } from "@/lib/economiza/constants";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import {
@@ -11,6 +12,14 @@ import {
 } from "@tanstack/react-router";
 import { productFormStore } from "@/lib/economiza/searchStores";
 import { CategoriesPage, Route as categoriesDefinition } from "@/routes/categorias";
+vi.mock("@/components/categories/useAvailableCategories", () => ({
+  useAvailableCategories: () => ({
+    codes: new Set(GPC_SEGMENTS.map((g) => g.codigo)),
+    failed: false,
+    waiting: false,
+    query: { isFetching: false, isError: false, hasNextPage: false },
+  }),
+}));
 vi.mock("@/components/categories/CategoryProducts", () => ({
   CategoryProducts: () => <p>Produtos selecionados</p>,
 }));

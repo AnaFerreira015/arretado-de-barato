@@ -1,8 +1,17 @@
+import { GPC_SEGMENTS } from "@/lib/economiza/constants";
 import { useState } from "react";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
 import { CategoriesPage } from "./categorias";
 import { productFormStore, productSearchStore } from "@/lib/economiza/searchStores";
+vi.mock("@/components/categories/useAvailableCategories", () => ({
+  useAvailableCategories: () => ({
+    codes: new Set(GPC_SEGMENTS.map((g) => g.codigo)),
+    failed: false,
+    waiting: false,
+    query: { isFetching: false, isError: false, hasNextPage: false },
+  }),
+}));
 vi.mock("@/components/categories/CategoryProducts", () => ({
   CategoryProducts: () => <div>Pesquisa dentro da categoria</div>,
 }));

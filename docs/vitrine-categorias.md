@@ -38,3 +38,11 @@ A vitrine exige GPC correspondente e GTIN válido em formato. Para Animais Vivos
 Os exemplos TRAVESSA INOX PEIXE, TEMPERO PARA FRANGO e MIOJO NISSIN GALINHA CAIPIRA estão cobertos por regressão, inclusive com GPC incorreto na resposta. A chave do cache da vitrine foi versionada para que resultados da versão anterior não sejam reapresentados; respostas ainda em cache no proxy passam novamente pela classificação.
 
 Referências de NCM: capítulo 01 (Animais vivos) em https://www.ibama.gov.br/component/legislacao/?legislacao=139490&view=legislacao e posição 0301 (Peixes vivos) em https://www.gov.br/siscomex/pt-br/noticias/noticias-siscomex-importacao/Comunicados/importacao-no-2026-062 . Não são usadas para cálculo de impostos.
+
+## Exibir somente categorias com produtos (07/11/2026)
+
+A grade passou a depender de uma verificação de produtos para o local, período e modo de dados atuais. Categorias sem registros confirmados não são exibidas. Uma falha na consulta é tratada como falha de verificação, sem afirmar que não há produtos.
+
+A API não tem um endpoint documentado de disponibilidade de todas as categorias. A descoberta começa com seis categorias comuns e permite Verificar mais categorias. Cada lote faz no máximo duas consultas simultâneas e tenta os três termos iniciais de cada segmento até encontrar um produto compatível. Não percorre todas as páginas da API para provar ausência: a grade representa categorias com produtos encontrados nas amostras verificadas. Uma categoria pode ter produtos fora dos termos ou páginas consultados e ainda não aparecer.
+
+Os produtos confirmados alimentam o mesmo cache da vitrine, de modo que clicar no cartão não repete a consulta inicial. O cache de disponibilidade também é separado por local, período e demonstração, com dois minutos de validade e cinco minutos sem uso antes da coleta. Mais categorias são verificadas somente por ação explícita, preservando o limite de requisições existente no proxy. Falhas são informadas e podem ser tentadas novamente.
