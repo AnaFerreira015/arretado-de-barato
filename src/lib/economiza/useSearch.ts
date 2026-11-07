@@ -20,9 +20,18 @@ export type SearchState<Q> = {
   error: { message: string; detail?: string | undefined; errors?: FieldErrors | undefined } | null;
 };
 
-const empty = <Q,>(): SearchState<Q> => ({
-  status: "idle", query: null, items: [], meta: null, invalidCount: 0, examinedCount: 0, fetchedAt: null,
-  cached: false, demo: false, origin: null, error: null,
+const empty = <Q>(): SearchState<Q> => ({
+  status: "idle",
+  query: null,
+  items: [],
+  meta: null,
+  invalidCount: 0,
+  examinedCount: 0,
+  fetchedAt: null,
+  cached: false,
+  demo: false,
+  origin: null,
+  error: null,
 });
 
 export function createSearchStore<Q>() {
@@ -31,7 +40,13 @@ export function createSearchStore<Q>() {
 
 export function toPlace(p: PlaceState, cnpj: string): Place | undefined {
   if (cnpj.trim()) return { tipo: "individual", cnpj: cnpj.trim() };
-  if (p.mode === "geo" && p.coords) return { tipo: "geolocalizacao", latitude: p.coords.lat, longitude: p.coords.lng, raio: p.raio };
+  if (p.mode === "geo" && p.coords)
+    return {
+      tipo: "geolocalizacao",
+      latitude: p.coords.lat,
+      longitude: p.coords.lng,
+      raio: p.raio,
+    };
   if (p.municipio) return { tipo: "municipio", codigoIBGE: p.municipio };
   return undefined;
 }
@@ -42,38 +57,66 @@ export function useSearchRunner<Q extends { pagina: number; place: Place }>(
   fn: (args: { data: { query: Q; demo: boolean } }) => Promise<SearchResponse>,
 ) {
   const reqId = useRef(0);
-  useEffect(() => () => {
-    reqId.current++;
-    store.set(s => s.status === "loading" || s.status === "loadingMore"
-      ? {...s, status: s.meta ? "success" : "idle"}
-      : s);
-  }, [store]);
+  useEffect(
+    () => () => {
+      reqId.current++;
+      store.set((s) =>
+        s.status === "loading" || s.status === "loadingMore"
+          ? { ...s, status: s.meta ? "success" : "idle" }
+          : s,
+      );
+    },
+    [store],
+  );
   const run = useCallback(
     async (query: Q, mode: "new" | "more") => {
       const id = ++reqId.current;
       const demo = prefsStore.get().demo;
-      const origin = query.place.tipo === "geolocalizacao" ? { lat: query.place.latitude, lng: query.place.longitude } : null;
-      store.set((s) => (mode === "new" ? { ...empty<Q>(), status: "loading", query, origin } : { ...s, status: "loadingMore", error: null }));
+      const origin =
+        query.place.tipo === "geolocalizacao"
+          ? { lat: query.place.latitude, lng: query.place.longitude }
+          : null;
+      store.set((s) =>
+        mode === "new"
+          ? { ...empty<Q>(), status: "loading", query, origin }
+          : { ...s, status: "loadingMore", error: null },
+      );
       let res: SearchResponse;
       try {
         res = await fn({ data: { query, demo } });
       } catch {
-        res = { ok: false, code: "unavailable", message: "Não foi possível falar com o servidor do aplicativo. Verifique sua internet." };
+        res = {
+          ok: false,
+          code: "unavailable",
+          message: "Não foi possível falar com o servidor do aplicativo. Verifique sua internet.",
+        };
       }
       if (id !== reqId.current) return; // stale
       if (!res.ok) {
-        store.set((s) => ({ ...s, status: "error", error: { message: res.message, detail: res.detail, errors: res.errors } }));
+        store.set((s) => ({
+          ...s,
+          status: "error",
+          error: { message: res.message, detail: res.detail, errors: res.errors },
+        }));
         return;
       }
       const { items, invalidCount, ...meta } = res.page;
       store.set((s) => {
         const seen = new Set(mode === "more" ? s.items.map((i) => i.id) : []);
-        const merged = mode === "more" ? [...s.items, ...items.filter((i) => !seen.has(i.id))] : items;
+        const merged =
+          mode === "more" ? [...s.items, ...items.filter((i) => !seen.has(i.id))] : items;
         return {
-          ...s, status: "success", query, items: merged, meta,
+          ...s,
+          status: "success",
+          query,
+          items: merged,
+          meta,
           invalidCount: (mode === "more" ? s.invalidCount : 0) + invalidCount,
           examinedCount: (mode === "more" ? s.examinedCount : 0) + meta.registrosPagina,
-          fetchedAt: res.fetchedAt, cached: res.cached, demo: res.demo, error: null,
+          fetchedAt: res.fetchedAt,
+          cached: res.cached,
+          demo: res.demo,
+          error: null,
         };
       });
     },
@@ -93,17 +136,24 @@ export function distanceFor(r: SaleRecord, origin: { lat: number; lng: number } 
   return haversineKm(origin, { lat: r.store.lat, lng: r.store.lng });
 }
 
-export function sortRecords(items: SaleRecord[], key: SortKey, origin: { lat: number; lng: number } | null) {
+export function sortRecords(
+  items: SaleRecord[],
+  key: SortKey,
+  origin: { lat: number; lng: number } | null,
+) {
   const arr = [...items];
   if (key === "preco") arr.sort((a, b) => a.valorVenda - b.valorVenda);
-  else if (key === "data") arr.sort((a, b) => Date.parse(b.dataVendaUtc) - Date.parse(a.dataVendaUtc));
-  else
+  else if (key === "data")
+    arr.sort((a, b) => Date.parse(b.dataVendaUtc) - Date.parse(a.dataVendaUtc));
+  else {
+    const distances = new Map(arr.map((record) => [record, distanceFor(record, origin)]));
     arr.sort((a, b) => {
-      const da = distanceFor(a, origin);
-      const db = distanceFor(b, origin);
+      const da = distances.get(a);
+      const db = distances.get(b);
       if (da == null) return db == null ? 0 : 1;
       if (db == null) return -1;
       return da - db;
     });
+  }
   return arr;
 }
