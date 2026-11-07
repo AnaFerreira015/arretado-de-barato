@@ -26,3 +26,15 @@ O local e o período são escolhidos logo na entrada da área de categorias, ant
 A categoria selecionada fica no parâmetro `categoria` da URL. O menu Categorias aponta à rota sem esse parâmetro e sempre retorna à grade; o botão Todas as categorias tem o mesmo efeito. Links diretos e o histórico do navegador preservam a seleção indicada na URL.
 
 Os ícones da grade agora são vetoriais Lucide, com cor, espessura, tamanho e fundo padronizados. O carregamento inicial mostra quatro cartões skeleton; a paginação acrescenta dois skeletons após os produtos já exibidos. Os avisos de carregamento ficam disponíveis aos leitores de tela e a animação respeita movimento reduzido. Atualizações em segundo plano preservam os cartões e indicam Atualizando no botão.
+
+## Correção de localização e classificação (07/11/2026)
+
+Sem local válido, somente a etapa de localização é exibida: a grade e a vitrine ficam indisponíveis, inclusive em links diretos para uma categoria. A validação reaproveita as mesmas regras do formulário e do servidor. Permissão de GPS negada mantém essa etapa aberta para seleção manual de município.
+
+Os 38 nomes/códigos foram conferidos com listarCategoriasGpc do Economiza Alagoas MCP, que reproduz o Anexo III do manual, e os nomes foram atualizados para os oficiais. Animais Vivos é um segmento real (89000000); o fato de uma descrição conter o nome de um animal não o classifica nesse segmento.
+
+A vitrine exige GPC correspondente e GTIN válido em formato. Para Animais Vivos há uma guarda adicional conservadora: só aceitar registros com NCM de oito dígitos no capítulo 01 ou na posição 0301. Sem essa evidência, o registro é ocultado, mesmo se trouxer GPC 89000000. Descrições com contradições explícitas (como travessa, tempero, miojo, ração ou filé) também são rejeitadas, sem atribuir outra categoria ao produto. Essa guarda pode omitir registros válidos incompletos; não tenta reconstruir classificação por nome nem corrigir os dados fiscais da origem. Os termos iniciais genéricos peixe/ave/galinha foram substituídos por termos explícitos de animais vivos.
+
+Os exemplos TRAVESSA INOX PEIXE, TEMPERO PARA FRANGO e MIOJO NISSIN GALINHA CAIPIRA estão cobertos por regressão, inclusive com GPC incorreto na resposta. A chave do cache da vitrine foi versionada para que resultados da versão anterior não sejam reapresentados; respostas ainda em cache no proxy passam novamente pela classificação.
+
+Referências de NCM: capítulo 01 (Animais vivos) em https://www.ibama.gov.br/component/legislacao/?legislacao=139490&view=legislacao e posição 0301 (Peixes vivos) em https://www.gov.br/siscomex/pt-br/noticias/noticias-siscomex-importacao/Comunicados/importacao-no-2026-062 . Não são usadas para cálculo de impostos.

@@ -45,6 +45,8 @@ import { initialPlace } from "@/components/eal/PlaceSelector";
 import { SearchLocationFields } from "@/components/search/SearchLocationFields";
 import { GPC_SEGMENTS, GPC_CODES } from "@/lib/economiza/constants";
 import { productFormStore, productSearchStore } from "@/lib/economiza/searchStores";
+import { validatePlace, type FieldErrors } from "@/lib/economiza/validation";
+import { toPlace } from "@/lib/economiza/useSearch";
 import { CategoryProducts } from "@/components/categories/CategoryProducts";
 
 export const Route = createFileRoute("/categorias")({
@@ -120,6 +122,9 @@ export function CategoriesPage({
   const form = productFormStore.use();
   const [fallbackPlace] = useState(initialPlace);
   const place = form.place ?? fallbackPlace;
+  const locationErrors: FieldErrors = {};
+  validatePlace(toPlace(place, ""), locationErrors);
+  const locationReady = Object.keys(locationErrors).length === 0;
   const category = GPC_SEGMENTS.find((g) => g.codigo === selected);
   const normalized = (s: string) =>
     s
@@ -138,7 +143,7 @@ export function CategoriesPage({
         </p>
       </header>
       <section aria-label="Local da pesquisa" className="rounded-2xl border bg-card p-4">
-        {!place.municipio && !place.coords && (
+        {!locationReady && (
           <p className="mb-3 font-semibold">Primeiro, escolha onde quer pesquisar.</p>
         )}
         <SearchLocationFields
@@ -149,7 +154,12 @@ export function CategoriesPage({
           onDaysChange={(days) => productFormStore.set((s) => ({ ...s, dias: days }))}
         />
       </section>
-      {category ? (
+      {!locationReady ? (
+        <p role="status" className="rounded-xl bg-primary-soft p-4">
+          Escolha um município acima ou toque em “Usar minha localização”. As categorias aparecerão
+          depois dessa escolha.
+        </p>
+      ) : category ? (
         <>
           <button
             type="button"

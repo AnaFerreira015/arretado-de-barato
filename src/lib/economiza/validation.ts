@@ -58,7 +58,7 @@ export function validateCnpj(raw: string): string | null {
   return null;
 }
 
-function validatePlace(place: Place | undefined, errors: FieldErrors) {
+export function validatePlace(place: Place | undefined, errors: FieldErrors) {
   if (!place) {
     errors.place = "Escolha um município, use sua localização ou informe um CNPJ.";
     return;

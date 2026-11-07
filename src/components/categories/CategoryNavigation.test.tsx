@@ -9,12 +9,20 @@ import {
   Outlet,
   RouterProvider,
 } from "@tanstack/react-router";
+import { productFormStore } from "@/lib/economiza/searchStores";
 import { CategoriesPage, Route as categoriesDefinition } from "@/routes/categorias";
 vi.mock("@/components/categories/CategoryProducts", () => ({
   CategoryProducts: () => <p>Produtos selecionados</p>,
 }));
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  productFormStore.reset();
+});
 it("tocar Categorias no menu limpa a seleção na mesma rota", async () => {
+  productFormStore.set((s) => ({
+    ...s,
+    place: { mode: "municipio", municipio: 2704302, raio: 5, coords: null },
+  }));
   const root = createRootRoute({
     component: () => (
       <>
